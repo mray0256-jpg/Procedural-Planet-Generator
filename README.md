@@ -61,10 +61,12 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     <img width="379/2" height="56/2" alt="lagrida_latex_editor (1)" src="https://github.com/user-attachments/assets/ed338973-1fea-4ed3-8695-cc99ce37bcf5" />
 
-    We can divide the total volume of the sphere by the newlyfound shared volume, yielding a ratio. This can then be applied to our surface area. $4 \cdot R^2$ would encapsulate the whole of the sphere; instead, we want a portion. If we were to divide by exactly numTectonics, the inherent randomization makes more plates than intended, adding a factor d where $d < 1$ decreases the amount of extra tectonics plates added. I've found that the preferred constant d is $2/3$.
+    We can divide the total volume of the sphere by the newlyfound shared volume, yielding a ratio. This can then be applied to our surface area.
 
-  <img width="194/3" height="50/3" alt="lagrida_latex_editor (2)" src="https://github.com/user-attachments/assets/475f6d68-fa4d-4075-8351-e5a4aa937120" />
+<img width="116" height="30" alt="lagrida_latex_editor (3)" src="https://github.com/user-attachments/assets/c3048275-021f-4aa2-99fc-435be6fb1aa4" />
 
+
+     $4 \cdot R^2$ would encapsulate the whole of the sphere; instead, we want a portion. If we were to divide by exactly numTectonics, the inherent randomization makes more plates than intended, adding a factor d where $d < 1$ decreases the amount of extra tectonics plates added. I've found that the preferred constant d is $2/3$.
 
     Now that we can divide our sphere into neat portions, we need to create our blobby sphere. To do this, adding randomized trig functions suffices. However, these need to be scaled by the radius so their undulating edges have the same amplitude. I chose to multiply the functions by $r / 6$, so r keeps the scale and 6 because it makes a nice shape (I ran out of the usual letters for constants, if you'll forgive me). Then, the inside of the trig functions is simply a wavelength dependent on where in 3D space the vertex lies. In the end, the function is roughly pythagorean theorem with some extra thought put in.
 
