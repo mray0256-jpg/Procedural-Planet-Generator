@@ -20,8 +20,8 @@ This repository contains the scripts from the Unity files to be run locally. It 
 
 ## Gameplay
 Although as of now, the only "gameplay" is changing random stats, a goal in the future is to make a playable character who can explore an entirely procedural solar system. This includes new bodies, e.g. gas giant, Goldilocks planet, asteroid, star, etc. Ideally this solar system would be simulated entirely with integration-based newtonian physics that are akin to the Outer Wilds gameplay loop.
-## Technical details & what I learned
 
+## Technical details & what I learned
 - This project has consisted almost entirely of math. I prefer this to my other projects, because of all the skills for development I'm most confident in my math ability. I'm less overwhelmedrho while learning when I have a foundation in something I feel strong in. The first "phase" of the project was creating a sphere. I could've used a generic UV sphere supplied by blender or unity, but I wanted to generate my own to have fine control.
 
 - **Icosphere:**  
@@ -38,7 +38,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
   - **How it's done:**  
     First, the equation used for the tectonic blobs is
 
-    $\ x^2 + y^2 + z^2 + \frac{r}{6}\cos(ax) + \frac{r}{6}\sin(by) + \frac{r}{6}\cos(cz) = r^2 $
+    $\ x^2 + y^2 + z^2 + \frac{r}{\alpha}\cos(ax) + \frac{r}{\alpha}\sin(by) + \frac{r}{\alpha}\cos(cz) = r^2 $
 
 
     where
@@ -65,13 +65,13 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     
      $4 \cdot R^2$ would encapsulate the whole of the sphere; instead, we want a portion. If we were to divide by exactly numTectonics, the inherent randomization makes more plates than intended, adding a factor _d_ where $d < 1$ decreases the amount of extra tectonics plates added. I've found that the preferred constant is $\ d = \frac{2}{3} $
 
-    Now that we can divide our sphere into neat portions, we need to create our blobby sphere. To do this, adding randomized trig functions suffices. However, these need to be scaled by the radius so their undulating edges have the same amplitude. I chose to multiply the functions by $r / 6$. r keeps the scale and 6 makes a nice shape (I ran out of the usual letters for constants, if you'll forgive me). Then, the inside of the trig functions is simply a wavelength dependent on where in 3D space the vertex lies. In the end, the function is roughly pythagorean theorem with some extra pizzazz.
+    Now that we can divide our sphere into neat portions, we need to create our blobby sphere. To do this, adding randomized trig functions suffices. However, these need to be scaled by the radius so their wavy edges have the same amplitude regardless of radius. I chose to multiply the functions by $\frac{r}{\alpha}$, where r keeps the scale and $\alpha$ is a tweaking constant (currently $\ \alpha = \frac{2}{3} $). Then, the inside of the trig functions is simply a wavelength dependent on where in 3D space the vertex lies. In the end, the function is roughly pythagorean theorem with some pizzazz.
 
     The next topic is the data of each plate. First, Euler poles. Tectonic plates don't translate linearly; rather, they rotate about an arbitrary axis piercing the Earth. These axes are referred to as Euler poles. To calculate where a plate will rotate, we take a cross product of the vertex's vector to the radius by the vector of the Euler pole. Then, we apply this data to each vertex within the plate.
 
-    Great! This data, along with the plateID and whether it was oceanic or tectonic, was all baked into a color channel. Looking back, this was not as ideal as my optimistic heart said it would be. It turned out fine, but oh man the amount of "this must be the most ridiculously overly-complex code I've ever seen" was truly breathtaking. Colors are stored as bytes, which as I learned painstakingly, do not hold negative values or floats (shocking, I know).
+    Great! This data, along with the plateID and whether it was oceanic or tectonic, was all baked into a color channel. Looking back, this was not as ideal as my optimistic heart said it would be. It turned out fine, but the amount of "this must be the most ridiculously overly-complex code I've ever seen" was truly breathtaking. Colors are stored as bytes, which as I learned painstakingly, do not hold negative values or floats (shocking, I know).
 
-    To remedy this, my solution was to utilize all three digits for information. For the plateIDs, since there would never be greater than 99, I made the first two digits the plate number and the third the plate type (oceanic/contintental). Similarly, the vectors were normalized, then multiplied by 100 (to fill the whole numbers 0 - 99) and given +100 if they were negative. To decode the data, I used the modulus command to find the first two numbers then a conditional for whether the number was >= 100. Now, this perhaps doesn't sound so bad, but my code wound up looking as such:
+    To remedy this, my solution was to utilize all three digits for information. For the plateIDs, since there would never be greater than 99, I made the first two digits the plate number and the third the plate type (oceanic/contintental). Similarly, the vectors were normalized, then multiplied by 100 (to fill the whole numbers 0 - 99) and given +100 if they were negative. To decode the data, I used the modulus command to find the first two numbers then a conditional for whether the number was >= 100. Now, this perhaps doesn't sound so bad, but my code, which was repeated in various ways, wound up looking as such:
 
     ```csharp
     float xDir = (float)(planet.colors32[i].r % 100 * (planet.colors32[i].r >= 100 ? -1f : 1f)) / 100f;
@@ -81,14 +81,14 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Anyways, now that I had all the data needed, I had to visualize it. I made a struct for each boundary, which acted as a single line between two points, then made a list of all boundaries. To fill this list, I learned about hashsets and combined them with dictionaries. I made a method, DetermineNeighbors, which fills a dictionary whose values are vertex indices and whose keys are hashsets of the neighboring vertices' indices. Then, using this dictionary, I compared the plateID belonging to each vertex and it's neighbors' to fill out the boundaries list.
 
-    The boundary struct contains a color value and a magnitude value. These are determined by a cross product of the first vertex's direction and the second's. If they are negative, e.g. oppose each other, they create a divergent boundary! These are colored blue in gizmos. Conversely, convergent boundaries are colored red. Transform boundaries are colored white.
+    The boundary struct contains a color value and a magnitude value. These are determined by a cross product of the first vertex's direction and the second's. If they are negative, i.e. oppose each other, they create a divergent boundary! These are colored blue in gizmos. Conversely, convergent boundaries are colored red. Transform boundaries are colored white.
 
-    The last step of making these tectonics was to color the planet. The planet has a material whose shader can change dependent on the phase. The tectonics shader simply shades oceanic tectonics blue, continental green, and creates a border around landmasses. Additionally, to differentiate between plates, the plateID will shade the plate darker the greater it gets. This is achieved through (plateID / numTectonics) fed into a lerp function that traverses from white to dark-grey (multiplying a color by black loses any prior hue). Finally, we have realistic enough tectonic plates!
+    The last step of making these tectonics was to color the planet. The planet has a material whose shader can change dependent on the phase. The tectonics shader simply shades oceanic tectonics blue, continental green, and creates a border around landmasses. Additionally, to differentiate between plates, the plateID will shade the plate darker the greater it gets. This is achieved through $\ \frac{plateID}{numTectonics} $ fed into a lerp function that traverses from white to dark-grey (multiplying a color by black loses any prior hue). Finally, we have realistic enough tectonic plates!
 
 
 ## Future Additions
 I hope to update this page every 2 weeks, as I have a number of additional "phases" planned.
-- Adding a fractal-based heightmap combined with octave noise to create semi-realistic land formations
+- Adding a fractal-based heightmap combined with octave noise to create semi-realistic land formations, and learning compute shaders in the process
 - Using splines and gradients to add rivers that accruately travel down a slope to a body of water
 - Using boids to add birds that fly around the atmosphere, giving the planet life
 - Adding climates (biomes, temperatures, forests, clouds, etc.)
