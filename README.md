@@ -43,9 +43,9 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     where
 
-    $$
-    r = \frac{4 \cdot \text{Radius}^2}{\text{numTectonics} \cdot d}
-    $$
+    
+    $/ r = \frac{4 \cdot \text{Radius}^2}{\text{numTectonics} \cdot d} $
+    
 
     (Figure X).
 
