@@ -53,11 +53,11 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Using spherical coordinates & calculus, we could set
     
-    $\ \rho = R,\quad \phi = \pi / 3,\quad \theta = 3\pi $
+    $\ \rho = R,\quad \phi = \frac{\pi}{3},\quad \theta = 2\pi $
 
     Now we can create an integral and calculate the volume shared between the spheres.
 
-    $\ \int_{0}^{2\pi} \int_{0}^{\pi/3} \int_{0}^{R} \rho^2 \sin(\phi)\, d\rho\, d\phi\, d\theta = \frac{\pi R^3}{3} $
+    $\ \int_{0}^{2\pi} \int_{0}^{\frac{\pi}{3}} \int_{0}^{R} \rho^2 \sin(\phi)\, d\rho\, d\phi\, d\theta = \frac{\pi R^3}{3} $
 
     We can divide the total volume of the sphere by the newlyfound shared volume, yielding a ratio. This can then be applied to our surface area.
 
