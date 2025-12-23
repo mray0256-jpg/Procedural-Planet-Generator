@@ -2,10 +2,7 @@
 Side project inspired by the video game Outer Wilds.
 ## Screenshots
 
-![Enemy Battle](assets/screenshots/Fight-1.png)
-![Dialogue UI](assets/screenshots/Dialogue-UI.png)
-![Boss Fight](assets/screenshots/Bossfight-1.png)
-![Hats UI](assets/screenshots/Hats-UI.png)
+
 
 ## Overview
 - A project created to simulate planet generation. Currently a WIP with the hopes of being updated every two or so weeks.
@@ -59,7 +56,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     $\ \int_{0}^{2\pi} \int_{0}^{\frac{\pi}{3}} \int_{0}^{R} \rho^2 \sin(\phi)\, d\rho\, d\phi\, d\theta = \frac{\pi R^3}{3} $
 
-    We can divide the total volume of the sphere by the newlyfound shared volume, yielding a ratio. This can then be applied to our surface area.
+    We can divide the newlyfound shared volume by the total volume of a sphere, yielding a ratio. This can then be applied to our surface area.
 
     $\ (\frac{\pi R^3}{3})(\frac{3}{4\pi R^3}) = \frac{1}{4} $
     
