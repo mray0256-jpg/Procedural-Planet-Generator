@@ -63,14 +63,13 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     We can divide the total volume of the sphere by the newlyfound shared volume, yielding a ratio. This can then be applied to our surface area.
 
-<img width="116" height="30" alt="lagrida_latex_editor (3)" src="https://github.com/user-attachments/assets/c3048275-021f-4aa2-99fc-435be6fb1aa4" />
-
-
+    <img width="116" height="30" alt="lagrida_latex_editor (3)" src="https://github.com/user-attachments/assets/c3048275-021f-4aa2-99fc-435be6fb1aa4" />
+    
      $4 \cdot R^2$ would encapsulate the whole of the sphere; instead, we want a portion. If we were to divide by exactly numTectonics, the inherent randomization makes more plates than intended, adding a factor d where $d < 1$ decreases the amount of extra tectonics plates added. I've found that the preferred constant d is $2/3$.
 
-    Now that we can divide our sphere into neat portions, we need to create our blobby sphere. To do this, adding randomized trig functions suffices. However, these need to be scaled by the radius so their undulating edges have the same amplitude. I chose to multiply the functions by $r / 6$, so r keeps the scale and 6 because it makes a nice shape (I ran out of the usual letters for constants, if you'll forgive me). Then, the inside of the trig functions is simply a wavelength dependent on where in 3D space the vertex lies. In the end, the function is roughly pythagorean theorem with some extra thought put in.
+    Now that we can divide our sphere into neat portions, we need to create our blobby sphere. To do this, adding randomized trig functions suffices. However, these need to be scaled by the radius so their undulating edges have the same amplitude. I chose to multiply the functions by $r / 6$. r keeps the scale and 6 makes a nice shape (I ran out of the usual letters for constants, if you'll forgive me). Then, the inside of the trig functions is simply a wavelength dependent on where in 3D space the vertex lies. In the end, the function is roughly pythagorean theorem with some extra pizzazz.
 
-    The next topic is the data of each plate. First, Euler poles. Tectonic plates don't translate linearly, rather, they rotate about an arbitrary axis piercing through the Earth. These arbitrary axes are referred to as Euler poles. To calculate where a plate will rotate, we take a cross product of the vector to the radius by the vector of the Euler pole. Then, we apply this data to each vertex within the plate.
+    The next topic is the data of each plate. First, Euler poles. Tectonic plates don't translate linearly; rather, they rotate about an arbitrary axis piercing the Earth. These axes are referred to as Euler poles. To calculate where a plate will rotate, we take a cross product of the vertex's vector to the radius by the vector of the Euler pole. Then, we apply this data to each vertex within the plate.
 
     Great! This data, along with the plateID and whether it was oceanic or tectonic, was all baked into a color channel. Looking back, this was not as ideal as my optimistic heart said it would be. It turned out fine, but oh man the amount of "this must be the most ridiculously overly-complex code I've ever seen" was truly breathtaking. Colors are stored as bytes, which as I learned painstakingly, do not hold negative values or floats (shocking, I know).
 
@@ -82,7 +81,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Horrible, let me tell you.
 
-    Anyways, now that I had all the data needed, I had to visualize it. I made a struct for each boundary, which acted as a single line between two points, then made a list of all boudnaries. To fill this list, I learned about hashsets and combined them with dictionaries. I made a method, DetermineNeighbors, which fills a dictionary whose values are vertex indices and whose keys are hashsets of the neighboring vertices' indices. Then, using this dictionary, I compared the plateID belonging to each vertex and it's neighbors' to fill out the boundaries list.
+    Anyways, now that I had all the data needed, I had to visualize it. I made a struct for each boundary, which acted as a single line between two points, then made a list of all boundaries. To fill this list, I learned about hashsets and combined them with dictionaries. I made a method, DetermineNeighbors, which fills a dictionary whose values are vertex indices and whose keys are hashsets of the neighboring vertices' indices. Then, using this dictionary, I compared the plateID belonging to each vertex and it's neighbors' to fill out the boundaries list.
 
     The boundary struct contains a color value and a magnitude value. These are determined by a cross product of the first vertex's direction and the second's. If they are negative, e.g. oppose each other, they create a divergent boundary! These are colored blue in gizmos. Conversely, convergent boundaries are colored red. Transform boundaries are colored white.
 
