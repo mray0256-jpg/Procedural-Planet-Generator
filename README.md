@@ -1,7 +1,22 @@
 # Procedural-Planet-Generator
 Side project inspired by the video game Outer Wilds.
-## Screenshots
 
+## Screenshots
+<img width="1720" height="1054" alt="Screenshot 2025-12-23 111323" src="https://github.com/user-attachments/assets/948ef4d8-d4c1-4f6c-bb24-118f8b0642ed" />
+**Figure 1: Subdivided Icosohedron**
+<img width="1813" height="1129" alt="Screenshot 2025-12-23 111339" src="https://github.com/user-attachments/assets/1410552d-5ebd-4ad2-8671-26d51ba5620b" />
+**Subdivided Icosohedron with Normalized Radius & Vertex Visuals**
+<img width="2381" height="1292" alt="Screenshot 2025-12-23 112142" src="https://github.com/user-attachments/assets/a76dda5f-3ae5-4707-b884-6368e13e1b8c" />
+**Figure 3: Tectonic Radius**
+<img width="2376" height="1299" alt="Screenshot 2025-12-23 111440" src="https://github.com/user-attachments/assets/cdaf0870-2ff9-49a5-944f-7d22ae4f4fb0" />
+<img width="1884" height="1063" alt="Screenshot 2025-12-23 111403" src="https://github.com/user-attachments/assets/5c4b7431-0f82-4fed-8de8-fb49c7bc2e12" />
+**Figures 4 & 5: Area / Volume Enclosed**
+<img width="1972" height="1331" alt="Screenshot 2025-12-23 111416" src="https://github.com/user-attachments/assets/9ac6ae40-97a0-4bc9-820b-ef23bd1cc4aa" />
+**Figure 6: Graph of Encapsulation Ratio**
+<img width="1576" height="1088" alt="Screenshot 2025-12-23 111051" src="https://github.com/user-attachments/assets/ad0a2871-26b8-4473-893a-2f8540df2dee" />
+**Figure 7: Tectonic Plates**
+<img width="2162" height="1201" alt="Screenshot 2025-12-23 111144" src="https://github.com/user-attachments/assets/6824590d-3b06-40f6-b4ff-5114a8cc66f7" />
+**Figure 8: Tectonic Plates with Visual Aides**
 
 
 ## Overview
@@ -25,7 +40,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
   This was a lot of index math. I have pages and pages of subdivided triangles with illegibly scribbled numbers that somehow made sense as I made it. If I redid it, I probably would've spent more time making an ironclad winding pattern so the vertices and faces are generated neatly, but as of now they're somewhat messy. As a result, I had to make redundancy-checker funcitons that are not exactly optimal. Additionally, there is no tessellation and no plans for it; but if I were to improve the sphere, that would be on the list.
 
   - **How it's done:**  
-    When I first wrote the subdividing methods, it was mapped to a single triangle, then to an octohedron, _then_ to an icosohedron. I started with a list of predetermined vectors and their faces corresponding to each shape. To subdivide the triangles, my method of choice was abusing lerping. I wrote a nested loop in code, in which the first loop determine vertical layer, interpolating from bottom to top (most vertices on the face to least), and the inner loop interpolatess from left to right. When looking at a subdivided triangle, the amount of vertices in each layer decreases by 1. Together, I used these properties to create vertices and their faces. To give a sense of the nested loop and index sheninigans that arose, I left the superfluous & debugging methods in the code.
+    When I first wrote the subdividing methods, it was mapped to a single triangle, then to an octohedron, _then_ to an icosohedron. I started with a list of predetermined vectors and their faces corresponding to each shape. To subdivide the triangles, my method of choice was abusing lerping. I wrote a nested loop in code, in which the first loop determine vertical layer, interpolating from bottom to top (most vertices on the face to least), and the inner loop interpolatess from left to right. When looking at a subdivided triangle, the amount of vertices in each layer decreases by 1. Together, I used these properties to create vertices and their faces. (**Figure 1**). After this process was finished, I added a simple method that would loop through each point and normalize their radius to the center. To do this, the current distance of a vertex from the center was divided by the goal radius. (**Figure 2**).
 
 - **Tectonics:**  
   The second phase was making tectonics for the planet. I wanted this so I could make semi-realistic land formations based on the collisions of tectonic plates. These could have been created through a number of strategies, but I chose one I hadn't seen before. First, a common method for generating tectonic plates is choosing a random vertex on the surface of the sphere, then checking a radius around said point. If other vertices don't belong to a plate, they now belong to the same plate that inital vertex does. Now, this is quite basic and only forms circles; most people move on to more advanced fractal algorithms to achieve the blobby shape tectonics on Earth make. I decided that was a convoluted solution. Instead, I changed the radius from a constant into an equation. Using trig functions, I made the outer bounds have that characteristic blobby, deformed shape; then, atop that, I added randomized constants that determine the wavelength of the trig functions. This resulted in shapes I am quite proud of, especially as it's a relatively simply solution that I hadn't seen before.
@@ -44,9 +59,9 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     $\ r = \frac{4 \cdot \text{Radius}^2}{\text{numTectonics} \cdot d} $
     
 
-    (Figure X).
+    (**Figure 3**).
 
-    Let's talk about r. I needed each tectonic plate to cover roughly $/ /frac{1}{desiredTectonics} $ surface area of the initial sphere. So, I had a question: if a sphere, of radius _R_, has an idential sphere generated on it's edge, how much of the first sphere's surface area does that second sphere encapsulate (Figure Y)? First, we find the points of intersection when represented as a circle. Since the spheres have identical radii, these points are a distance R. Similarly, from center to center is also R. This creates two equilateral triangles (Figure Z). Thus, our angle, $\theta$, is 120 degrees.
+    Let's talk about r. I needed each tectonic plate to cover roughly $//frac{1}{desiredTectonics} $ surface area of the initial sphere. So, I had a question: if a sphere, of radius _R_, has an idential sphere generated on it's edge, how much of the first sphere's surface area does that second sphere encapsulate (Figure Y)? First, we find the points of intersection when represented as a circle. Since the spheres have identical radii, these points are a distance R. Similarly, from center to center is also R. This creates two equilateral triangles (Figure Z). Thus, our angle, $\theta$, is 120 degrees.
 
     Using spherical coordinates & calculus, we could set
     
@@ -56,13 +71,13 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     $\ \int_{0}^{2\pi} \int_{0}^{\frac{\pi}{3}} \int_{0}^{R} \rho^2 \sin(\phi)\, d\rho\, d\phi\, d\theta = \frac{\pi R^3}{3} $
 
-    We can divide the newlyfound shared volume by the total volume of a sphere, yielding a ratio. This can then be applied to our surface area.
+    We can divide the newlyfound shared volume by the total volume of a sphere, yielding a ratio. This can then be applied to our surface area (**Figures 4 & 5**).
 
     $\ (\frac{\pi R^3}{3})(\frac{3}{4\pi R^3}) = \frac{1}{4} $
     
-     $4 \cdot R^2$ would encapsulate the whole of the sphere; instead, we want a portion. If we were to divide by exactly numTectonics, the inherent randomization makes more plates than intended, adding a factor _d_ where $d < 1$ decreases the amount of extra tectonics plates added. I've found that the preferred constant is $\ d = \frac{2}{3} $
+     $4 \cdot R^2$ would encapsulate the whole of the sphere; instead, we want a portion (**Figure 6**). If we were to divide by exactly numTectonics, the inherent randomization makes more plates than intended, adding a factor _d_ where $d < 1$ decreases the amount of extra tectonics plates added. I've found that the preferred constant is $\ d = \frac{2}{3} $
 
-    Now that we can divide our sphere into neat portions, we need to create our blobby sphere. To do this, adding randomized trig functions suffices. However, these need to be scaled by the radius so their wavy edges have the same amplitude regardless of radius. I chose to multiply the functions by $\frac{r}{\alpha}$, where r keeps the scale and $\alpha$ is a tweaking constant (currently $\ \alpha = \frac{2}{3} $). Then, the inside of the trig functions is simply a wavelength dependent on where in 3D space the vertex lies. In the end, the function is roughly pythagorean theorem with some pizzazz.
+    Now that we can divide our sphere into neat portions, we need to create our blobby sphere. To do this, adding randomized trig functions suffices. However, these need to be scaled by the radius so their wavy edges have the same amplitude regardless of radius. I chose to multiply the functions by $\frac{r}{\alpha}$, where r keeps the scale and $\alpha$ is a tweaking constant (currently $\ \alpha = 6 $). Then, the inside of the trig functions is simply a wavelength dependent on where in 3D space the vertex lies. In the end, the function is roughly pythagorean theorem with some pizzazz.
 
     The next topic is the data of each plate. First, Euler poles. Tectonic plates don't translate linearly; rather, they rotate about an arbitrary axis piercing the Earth. These axes are referred to as Euler poles. To calculate where a plate will rotate, we take a cross product of the vertex's vector to the radius by the vector of the Euler pole. Then, we apply this data to each vertex within the plate.
 
@@ -78,7 +93,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Anyways, now that I had all the data needed, I had to visualize it. I made a struct for each boundary, which acted as a single line between two points, then made a list of all boundaries. To fill this list, I learned about hashsets and combined them with dictionaries. I made a method, DetermineNeighbors, which fills a dictionary whose values are vertex indices and whose keys are hashsets of the neighboring vertices' indices. Then, using this dictionary, I compared the plateID belonging to each vertex and it's neighbors' to fill out the boundaries list.
 
-    The boundary struct contains a color value and a magnitude value. These are determined by a cross product of the first vertex's direction and the second's. If they are negative, i.e. oppose each other, they create a divergent boundary! These are colored blue in gizmos. Conversely, convergent boundaries are colored red. Transform boundaries are colored white.
+    The boundary struct contains a color value and a magnitude value. These are determined by a cross product of the first vertex's direction and the second's. If they are negative, i.e. oppose each other, they create a divergent boundary! These are colored blue in gizmos. Conversely, convergent boundaries are colored red. Transform boundaries are colored white (**Figures 6 & 7**).
 
     The last step of making these tectonics was to color the planet. The planet has a material whose shader can change dependent on the phase. The tectonics shader simply shades oceanic tectonics blue, continental green, and creates a border around landmasses. Additionally, to differentiate between plates, the plateID will shade the plate darker the greater it gets. This is achieved through $\\frac{plateID}{numTectonics}$ fed into a lerp function that traverses from white to dark-grey (multiplying a color by black loses any prior hue). Finally, we have realistic enough tectonic plates!
 
