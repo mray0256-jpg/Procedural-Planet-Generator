@@ -52,10 +52,8 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     Let's talk about r. I needed each tectonic plate to cover roughly $1/desiredTectonics$ surface area of the initial sphere. So, I had a question: if a sphere, of radius R, has an idential sphere generated on it's edge, how much of the first sphere's surface area does that second sphere encapsulate (Figure Y)? First, we find the points of intersection when represented as a circle. Since the spheres have identical radii, these points are a distance R. Similarly, from center to center is also R. This creates two equilateral triangles (Figure Z). Thus, our angle, $\theta$, is 120 degrees.
 
     Using spherical coordinates & calculus, we could set
-
-    $$
-    \rho = R,\quad \phi = 2\pi,\quad \theta = \pi / 3
-    $$
+    
+    $\ \rho = R,\quad \phi = 2\pi,\quad \theta = \pi / 3 $
 
     Now we can create an integral and calculate the volume shared between the spheres.
 
