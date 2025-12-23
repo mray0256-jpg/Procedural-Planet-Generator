@@ -38,7 +38,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
   - **How it's done:**  
     First, the equation used for the tectonic blobs is
 
-    <img width="513" height="41" alt="lagrida_latex_editor" src="https://github.com/user-attachments/assets/e34b731c-cccd-4f0b-ac1b-6c9c74a4a050" />
+    $\ x^2 + y^2 + z^2 + \frac{r}{6}\cos(ax) + \frac{r}{6}\sin(by) + \frac{r}{6}\cos(cz) = r^2 $
 
 
     where
@@ -49,7 +49,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     (Figure X).
 
-    Let's talk about r. I needed each tectonic plate to cover roughly $1/desiredTectonics$ surface area of the initial sphere. So, I had a question: if a sphere, of radius R, has an idential sphere generated on it's edge, how much of the first sphere's surface area does that second sphere encapsulate (Figure Y)? First, we find the points of intersection when represented as a circle. Since the spheres have identical radii, these points are a distance R. Similarly, from center to center is also R. This creates two equilateral triangles (Figure Z). Thus, our angle, $\theta$, is 120 degrees.
+    Let's talk about r. I needed each tectonic plate to cover roughly $/ /frac{1}{desiredTectonics} $ surface area of the initial sphere. So, I had a question: if a sphere, of radius _R_, has an idential sphere generated on it's edge, how much of the first sphere's surface area does that second sphere encapsulate (Figure Y)? First, we find the points of intersection when represented as a circle. Since the spheres have identical radii, these points are a distance R. Similarly, from center to center is also R. This creates two equilateral triangles (Figure Z). Thus, our angle, $\theta$, is 120 degrees.
 
     Using spherical coordinates & calculus, we could set
     
@@ -57,13 +57,13 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Now we can create an integral and calculate the volume shared between the spheres.
 
-    <img width="379/2" height="56/2" alt="lagrida_latex_editor (1)" src="https://github.com/user-attachments/assets/ed338973-1fea-4ed3-8695-cc99ce37bcf5" />
+    $\ \int_{0}^{\pi/3} \int_{0}^{2\pi} \int_{0}^{R} \rho^2 \sin(\phi)\, d\rho\, d\phi\, d\theta = \frac{\pi R^3}{3} $
 
     We can divide the total volume of the sphere by the newlyfound shared volume, yielding a ratio. This can then be applied to our surface area.
 
-    <img width="116" height="30" alt="lagrida_latex_editor (3)" src="https://github.com/user-attachments/assets/c3048275-021f-4aa2-99fc-435be6fb1aa4" />
+    $\ (\frac{\pi R^3}{3})(\frac{3}{4\pi R^3}) = \frac{1}{4} $
     
-     $4 \cdot R^2$ would encapsulate the whole of the sphere; instead, we want a portion. If we were to divide by exactly numTectonics, the inherent randomization makes more plates than intended, adding a factor d where $d < 1$ decreases the amount of extra tectonics plates added. I've found that the preferred constant d is $2/3$.
+     $4 \cdot R^2$ would encapsulate the whole of the sphere; instead, we want a portion. If we were to divide by exactly numTectonics, the inherent randomization makes more plates than intended, adding a factor _d_ where $d < 1$ decreases the amount of extra tectonics plates added. I've found that the preferred constant is $\ d = \frac{2}{3} $
 
     Now that we can divide our sphere into neat portions, we need to create our blobby sphere. To do this, adding randomized trig functions suffices. However, these need to be scaled by the radius so their undulating edges have the same amplitude. I chose to multiply the functions by $r / 6$. r keeps the scale and 6 makes a nice shape (I ran out of the usual letters for constants, if you'll forgive me). Then, the inside of the trig functions is simply a wavelength dependent on where in 3D space the vertex lies. In the end, the function is roughly pythagorean theorem with some extra pizzazz.
 
