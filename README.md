@@ -83,7 +83,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     The boundary struct contains a color value and a magnitude value. These are determined by a cross product of the first vertex's direction and the second's. If they are negative, i.e. oppose each other, they create a divergent boundary! These are colored blue in gizmos. Conversely, convergent boundaries are colored red. Transform boundaries are colored white.
 
-    The last step of making these tectonics was to color the planet. The planet has a material whose shader can change dependent on the phase. The tectonics shader simply shades oceanic tectonics blue, continental green, and creates a border around landmasses. Additionally, to differentiate between plates, the plateID will shade the plate darker the greater it gets. This is achieved through $\ \frac{plateID}{numTectonics} $ fed into a lerp function that traverses from white to dark-grey (multiplying a color by black loses any prior hue). Finally, we have realistic enough tectonic plates!
+    The last step of making these tectonics was to color the planet. The planet has a material whose shader can change dependent on the phase. The tectonics shader simply shades oceanic tectonics blue, continental green, and creates a border around landmasses. Additionally, to differentiate between plates, the plateID will shade the plate darker the greater it gets. This is achieved through $ \frac{plateID}{numTectonics} $ fed into a lerp function that traverses from white to dark-grey (multiplying a color by black loses any prior hue). Finally, we have realistic enough tectonic plates!
 
 
 ## Future Additions
