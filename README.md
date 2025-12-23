@@ -3,20 +3,20 @@ Side project inspired by the video game Outer Wilds.
 
 ## Screenshots
 <img width="1720" height="1054" alt="Screenshot 2025-12-23 111323" src="https://github.com/user-attachments/assets/948ef4d8-d4c1-4f6c-bb24-118f8b0642ed" />
-**Figure 1: Subdivided Icosohedron**
+(**Figure 1: Subdivided Icosohedron**)
 <img width="1813" height="1129" alt="Screenshot 2025-12-23 111339" src="https://github.com/user-attachments/assets/1410552d-5ebd-4ad2-8671-26d51ba5620b" />
-**Subdivided Icosohedron with Normalized Radius & Vertex Visuals**
+(**Subdivided Icosohedron with Normalized Radius & Vertex Visuals**)
 <img width="2381" height="1292" alt="Screenshot 2025-12-23 112142" src="https://github.com/user-attachments/assets/a76dda5f-3ae5-4707-b884-6368e13e1b8c" />
-**Figure 3: Tectonic Radius**
+(**Figure 3: Tectonic Radius**)
 <img width="2376" height="1299" alt="Screenshot 2025-12-23 111440" src="https://github.com/user-attachments/assets/cdaf0870-2ff9-49a5-944f-7d22ae4f4fb0" />
 <img width="1884" height="1063" alt="Screenshot 2025-12-23 111403" src="https://github.com/user-attachments/assets/5c4b7431-0f82-4fed-8de8-fb49c7bc2e12" />
-**Figures 4 & 5: Area / Volume Enclosed**
+(**Figures 4 & 5: Area / Volume Enclosed**)
 <img width="1972" height="1331" alt="Screenshot 2025-12-23 111416" src="https://github.com/user-attachments/assets/9ac6ae40-97a0-4bc9-820b-ef23bd1cc4aa" />
-**Figure 6: Graph of Encapsulation Ratio**
+(**Figure 6: Graph of Encapsulation Ratio**)
 <img width="1576" height="1088" alt="Screenshot 2025-12-23 111051" src="https://github.com/user-attachments/assets/ad0a2871-26b8-4473-893a-2f8540df2dee" />
-**Figure 7: Tectonic Plates**
+(**Figure 7: Tectonic Plates**)
 <img width="2162" height="1201" alt="Screenshot 2025-12-23 111144" src="https://github.com/user-attachments/assets/6824590d-3b06-40f6-b4ff-5114a8cc66f7" />
-**Figure 8: Tectonic Plates with Visual Aides**
+(**Figure 8: Tectonic Plates with Visual Aides**)
 
 
 ## Overview
