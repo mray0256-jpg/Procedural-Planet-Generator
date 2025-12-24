@@ -24,7 +24,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 - **Icosphere:**  
   This was a lot of index math. I have pages and pages of subdivided triangles with illegibly scribbled numbers that somehow made sense as I made it. If I redid it, I probably would've spent more time making an ironclad winding pattern so the vertices and faces are generated neatly, but as of now they're somewhat messy. As a result, I had to make redundancy-checker funcitons that are not exactly optimal. Additionally, there is no tessellation and no plans for it; but if I were to improve the sphere, that would be on the list.
 
-  <img width="860" height="527" alt="Screenshot 2025-12-23 111323" src="https://github.com/user-attachments/assets/948ef4d8-d4c1-4f6c-bb24-118f8b0642ed" />
+  <img width="430" height="260" alt="Screenshot 2025-12-23 111323" src="https://github.com/user-attachments/assets/948ef4d8-d4c1-4f6c-bb24-118f8b0642ed" />
 *Figure 1: Subdivided Icosohedron*
 
   - **How it's done:**  
