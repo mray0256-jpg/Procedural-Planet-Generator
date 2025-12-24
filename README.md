@@ -71,7 +71,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     $4 \cdot R^2$ would encapsulate the whole of the sphere; instead, we want a portion. If we were to divide by exactly numTectonics, the inherent randomization winds up making _more_ plates than intended. To counteract, we add a factor _d_ where $d < 1$ decreases the amount of extra tectonics plates added. I've found that the preferred constant is $\ d = \frac{2}{3} $.
 
     <img width="493" height="332" alt="Screenshot 2025-12-23 111416" src="https://github.com/user-attachments/assets/9ac6ae40-97a0-4bc9-820b-ef23bd1cc4aa" /><br>
-     *Figure 6: Graph of Encapsulation Ratio ($\frac{1}{4} $)*
+     *Figure 6: Graph of Encapsulation Ratio*
 
     Now that we can divide our sphere into neat portions, we need to create our blobby sphere. To do this, adding randomized trig functions suffices; however, these need to be scaled by the radius so their wavy edges have the same amplitude regardless of said radius. I chose to multiply the functions by $\frac{r}{\alpha}$, where r keeps the scale and $\alpha$ is a tweaking constant (currently $\ \alpha = 6 $). Then, the inside of the trig functions is simply a wavelength dependent on where in 3D space the vertex lies. In the end, the function is roughly pythagorean theorem with some pizzazz.
 
@@ -91,7 +91,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     The boundary struct contains a color value and a magnitude value. These are determined by a cross product of the first vertex's direction and the second's. If they are negative, i.e. oppose each other, they create a divergent boundary! These are colored blue in gizmos. Conversely, convergent boundaries are colored red. Transform boundaries are colored white (**Figures 6 & 7**).
     
-    <img width="788" height="544" alt="Screenshot 2025-12-23 111051" src="https://github.com/user-attachments/assets/ad0a2871-26b8-4473-893a-2f8540df2dee" /><br>
+    <img width="394" height="272" alt="Screenshot 2025-12-23 111051" src="https://github.com/user-attachments/assets/ad0a2871-26b8-4473-893a-2f8540df2dee" /><br>
      *Figure 6: Tectonic Plates*
   
 
