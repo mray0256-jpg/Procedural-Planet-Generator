@@ -2,7 +2,7 @@
 Side project inspired by the video game Outer Wilds.
 
  <img width="2162" height="1201" alt="Screenshot 2025-12-23 111144" src="https://github.com/user-attachments/assets/6824590d-3b06-40f6-b4ff-5114a8cc66f7" />
-  *Tectonic Plates with Visual Aides*
+  <em>Tectonic Plates with Visual Aides</em>
 
 ## Overview
 - A project created to simulate planet generation. Currently a WIP with the hopes of being updated every two or so weeks.
@@ -25,13 +25,13 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
   This was a lot of index math. I have pages and pages of subdivided triangles with illegibly scribbled numbers that somehow made sense as I made it. If I redid it, I probably would've spent more time making an ironclad winding pattern so the vertices and faces are generated neatly, but as of now they're somewhat messy. As a result, I had to make redundancy-checker funcitons that are not exactly optimal. Additionally, there is no tessellation and no plans for it; but if I were to improve the sphere, that would be on the list.
 
  <img width="430" height="260" alt="Screenshot 2025-12-23 111323" src="https://github.com/user-attachments/assets/948ef4d8-d4c1-4f6c-bb24-118f8b0642ed" />
-   *Figure 1: Subdivided Icosohedron*
+   <em>Figure 1: Subdivided Icosohedron</em>
 
   - **How it's done:**  
     When I first wrote the subdividing methods, it was mapped to a single triangle, then to an octohedron, _then_ to an icosohedron. I started with a list of predetermined vectors and their faces corresponding to a base shape. To subdivide its triangles, my method of choice was lerp abuse. I wrote a nested loop in code, in which the first loop determines the vertical layer, interpolating from bottom to top, and the inner loop interpolates from left to right. When looking at a subdivided triangle, the amount of vertices in each layer decreases by 1. Together, I used these properties to create vertices and their faces. After this process was finished, I added a simple method that would loop through each point and normalize their radius to the center. To do this, the current distance of a vertex from the center was divided by the goal radius, then that scalar ratio was multiplied to the vector position.
 
  <img width="502" height="282" alt="Screenshot 2025-12-23 111339" src="https://github.com/user-attachments/assets/1410552d-5ebd-4ad2-8671-26d51ba5620b" />
-   *Figure 2: Subdivided Icosohedron with Normalized Radius & Vertex Visuals*
+   <em>Figure 2: Subdivided Icosohedron with Normalized Radius & Vertex Visuals</em>
 
 - **Tectonics:**  
   The second phase was making tectonics for the planet. I wanted this so I could make semi-realistic land formations based on the collisions of tectonic plates. These could have been created through a number of strategies, but I chose one I hadn't seen before. To start, a common method for generating tectonic plates is choosing a random vertex on the surface of the sphere, then checking a radius around said point. If other vertices don't belong to a plate, they now belong to the same plate that inital vertex does. Now, this is quite basic and only forms circles; most people move on to more advanced fractal algorithms to achieve the blobby shape tectonics on Earth make. I decided that was a convoluted solution. Instead, I changed the radius from a constant into an equation. Using trig functions, I made the outer bounds have that characteristic blobby, deformed shape; then, atop that, I added randomized constants that determine the wavelength of the trig functions. This resulted in shapes I am quite proud of, especially as it's a relatively simply solution that I hadn't seen before.
@@ -48,7 +48,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     $\ r = \frac{4 \cdot \text{Radius}^2}{\text{numTectonics} \cdot d} $
     
    <img width="595" height="323" alt="Screenshot 2025-12-23 112142" src="https://github.com/user-attachments/assets/a76dda5f-3ae5-4707-b884-6368e13e1b8c" />
-    *Figure 3: Tectonic Radius*
+    <em>Figure 3: Tectonic Radius</em>
 
     Let's talk about r. I needed each tectonic plate to cover roughly $\frac{1}{desiredTectonics}$ surface area of the initial sphere. So, I had a question: if a sphere, of radius _R_, has an idential sphere generated on it's edge, how much of the first sphere's surface area does that second sphere encapsulate? First, we find the points of intersection when represented as a circle. Since the spheres have identical radii, these points are a distance R. Similarly, from center to center is also R. This creates two equilateral triangles. Thus, our angle, $\theta$, is 60 degrees.
 
@@ -64,14 +64,14 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
    <img width="594" height="325" alt="Screenshot 2025-12-23 111440" src="https://github.com/user-attachments/assets/cdaf0870-2ff9-49a5-944f-7d22ae4f4fb0" />
    <img width="471" height="265" alt="Screenshot 2025-12-23 111403" src="https://github.com/user-attachments/assets/5c4b7431-0f82-4fed-8de8-fb49c7bc2e12" />
-    *Figures 4 & 5: Area / Volume Enclosed*
+    <em>Figures 4 & 5: Area / Volume Enclosed</em>
 
     $\ (\frac{\pi R^3}{3})(\frac{3}{4\pi R^3}) = \frac{1}{4} $
     
     $4 \cdot R^2$ would encapsulate the whole of the sphere; instead, we want a portion. If we were to divide by exactly numTectonics, the inherent randomization winds up making _more_ plates than intended. To counteract, we add a factor _d_ where $d < 1$ decreases the amount of extra tectonics plates added. I've found that the preferred constant is $\ d = \frac{2}{3} $.
 
     <img width="493" height="332" alt="Screenshot 2025-12-23 111416" src="https://github.com/user-attachments/assets/9ac6ae40-97a0-4bc9-820b-ef23bd1cc4aa" />
-     *Figure 6: Graph of Encapsulation Ratio ($\frac{1}{4} $)*
+     <em>Figure 6: Graph of Encapsulation Ratio ($\frac{1}{4} $)</em>
 
     Now that we can divide our sphere into neat portions, we need to create our blobby sphere. To do this, adding randomized trig functions suffices; however, these need to be scaled by the radius so their wavy edges have the same amplitude regardless of said radius. I chose to multiply the functions by $\frac{r}{\alpha}$, where r keeps the scale and $\alpha$ is a tweaking constant (currently $\ \alpha = 6 $). Then, the inside of the trig functions is simply a wavelength dependent on where in 3D space the vertex lies. In the end, the function is roughly pythagorean theorem with some pizzazz.
 
@@ -92,13 +92,13 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     The boundary struct contains a color value and a magnitude value. These are determined by a cross product of the first vertex's direction and the second's. If they are negative, i.e. oppose each other, they create a divergent boundary! These are colored blue in gizmos. Conversely, convergent boundaries are colored red. Transform boundaries are colored white (**Figures 6 & 7**).
     
     <img width="788" height="544" alt="Screenshot 2025-12-23 111051" src="https://github.com/user-attachments/assets/ad0a2871-26b8-4473-893a-2f8540df2dee" />
-     *Figure 6: Tectonic Plates*
+     <em>Figure 6: Tectonic Plates</em>
   
 
     The last step of making these tectonics was to color the planet. The planet has a material whose shader can change dependent on the phase. The tectonics shader simply shades oceanic tectonics blue, continental green, and creates a border around landmasses. Additionally, to differentiate between plates, each plate is shaded darker as their IDs increases. This is achieved through $\\frac{plateID}{numTectonics}$ fed into a lerp function that traverses from white to dark-grey (multiplying a color by black loses any prior hue). Finally, we have realistic tectonic plates!
 
     <img width="540" height="300" alt="Screenshot 2025-12-23 111144" src="https://github.com/user-attachments/assets/6824590d-3b06-40f6-b4ff-5114a8cc66f7" />
-     *Figure 7: Tectonic Plates with Visual Aides*
+     <em>Figure 7: Tectonic Plates with Visual Aides</em>
 
 ## Future Additions
 I hope to update this page every 2 weeks, as I have a number of additional "phases" planned.
