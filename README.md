@@ -89,7 +89,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Anyways, now that I had all the data needed, I had to visualize it. I made a struct for each boundary, which acted as a single line between two points, then made a list of all boundaries. To fill this list, I learned about hashsets and combined them with dictionaries. I made a method, DetermineNeighbors, which fills a dictionary whose values are vertex indices and whose keys are hashsets of the neighboring vertices' indices. Then, using this dictionary, I compared the plateID belonging to each vertex and it's neighbors' to fill out the boundaries list.
 
-    The boundary struct contains a color value and a magnitude value. These are determined by a cross product of the first vertex's direction and the second's. If they are negative, i.e. oppose each other, they create a divergent boundary! These are colored blue in gizmos. Conversely, convergent boundaries are colored red. Transform boundaries are colored white (**Figures 6 & 7**).
+    The boundary struct contains a color value and a magnitude value. These are determined by a cross product of the first vertex's direction and the second's. If they are negative, i.e. oppose each other, they create a divergent boundary! These are colored blue in gizmos. Conversely, convergent boundaries are colored red. Transform boundaries are colored white.
     
     <img width="394" height="272" alt="Screenshot 2025-12-23 111051" src="https://github.com/user-attachments/assets/ad0a2871-26b8-4473-893a-2f8540df2dee" /><br>
      *Figure 6: Tectonic Plates*
