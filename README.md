@@ -110,7 +110,7 @@ I hope to update this page every 2 weeks, as I have a number of additional "phas
 - Adding a player and potential gameplay elements
 
 ## Future Improvements
-There are many improvements that could be made, but the most glaring to me is the lack of object-oriented-ness. My own knowledge of object-oriented programming is lacking, but constantly growing, especially as my college career goes on. Another significant improvement is optimization (tessellation, culling, etc.).
+There are many improvements that could be made, but the most glaring to me is the lack of object-oriented-ness. My own knowledge of object-oriented programming is rudimentary, but constantly growing, especially as my college career goes on. Another significant improvement is optimization (tessellation, culling, etc.). Thanks for reading! If you noticed any mistakes or would like to contact me, please email me at mray0256@gmail.com. Have a nice day!
 
 ## Sources & Inspirations
 - Outer Wilds Technical Presentation: [Hosted by Unity](https://www.youtube.com/watch?v=Ww12q6HsmJA)
