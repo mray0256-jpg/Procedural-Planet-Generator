@@ -41,7 +41,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
   - **How it's done:**  
     First, the equation used for the tectonic blobs is
 
-    $\ x^2 + y^2 + z^2 + \frac{r}{\alpha}\cos(ax) + \frac{r}{\alpha}\sin(by) + \frac{r}{\alpha}\cos(cz) = r^2 $
+    $\ x^2 + y^2 + z^2 + \frac{r}{\alpha}\cos(ax) + \frac{r}{\alpha}\sin(by) + \frac{r}{\alpha}\cos(cz) = r $
 
     where
     
