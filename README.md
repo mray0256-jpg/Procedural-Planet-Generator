@@ -13,7 +13,7 @@ Side project inspired by the video game Outer Wilds.
 - Language: C#, HLSL
 
 ## Project Setup
-This repository contains the scripts from the Unity files to be run locally. It does not include exe and build files to reduce bloating.
+This project does not contain all of the files to run locally, however it does contain the primary script *PlanetGenerator.cs* so the code can be reviewed. Note that the code was left purposefully uncleaned; any debugging statements or superfluous methods that were originally written while testing are still there. At some point, when there is more to this project, it will be able to be downloaded locally.
 
 ## Gameplay
 Although as of now, the only "gameplay" is changing random stats, a goal in the future is to make a playable character who can explore an entirely procedural solar system. This entails different bodies, e.g. gas giant, Goldilocks planet, asteroid, star, etc. Ideally this solar system would be simulated entirely with integration-based newtonian physics that are akin to the Outer Wilds gameplay loop.
