@@ -2,7 +2,7 @@
 Side project inspired by the video game Outer Wilds.
 
  <img width="2162" height="1201" alt="Screenshot 2025-12-23 111144" src="https://github.com/user-attachments/assets/6824590d-3b06-40f6-b4ff-5114a8cc66f7" /><br>
-  *Tectonic Plates with Visual Aides*
+  *Tectonic Plates with Visual Aids*
 
 ## Overview
 - A project created to simulate planet generation. Currently a WIP with the hopes of being updated every two or so weeks.
@@ -98,7 +98,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     The last step of making these tectonics was to color the planet. The planet has a material whose shader can change dependent on the phase. The tectonics shader simply shades oceanic tectonics blue, continental green, and creates a border around landmasses. Additionally, to differentiate between plates, each plate is shaded darker as their IDs increases. This is achieved through $\\frac{plateID}{numTectonics}$ fed into a lerp function that traverses from white to dark-grey (multiplying a color by black loses any prior hue). Finally, we have realistic tectonic plates!
 
     <img width="540" height="300" alt="Screenshot 2025-12-23 111144" src="https://github.com/user-attachments/assets/6824590d-3b06-40f6-b4ff-5114a8cc66f7" /><br>
-     *Figure 7: Tectonic Plates with Visual Aides*
+     *Figure 7: Tectonic Plates with Visual Aids*
 
 ## Future Additions
 I hope to update this page every 2 weeks, as I have a number of additional "phases" planned.
