@@ -40,7 +40,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Then, using the vertices we can generate faces
     
-    $\ numFaces = 20(n+1)+40\frac{n(n+1)}{2} $
+    $\ numFaces = 20(n+1)+40(\frac{n(n+1)}{2}) $
 
     with the approximation
 
@@ -147,7 +147,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
        int isMobile; //to freeze a particle
        int frozenIndex; //points to parent
        int step;
-       int headChild; //points to this particles FIRST child
+       int eldestChild; //points to this particles FIRST child
        int youngerSibling; //a pointer for this particle next youngest sibling
        float magnitude; //used for stickiness & max height
        float particleRNG;
@@ -209,8 +209,214 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     }
     ```
 
-  
+    We finally have all of the underlying infrastructure to begin the actual algorithm. Converting DLA onto the GPU is difficult due its inherent sequential data. We can attempt to ameliorate this by generating *lots* of particles and running one iteration of them all at once. Recall the race conditions we discussed earlier. The same thing happens here, just in a different form. This time, our problem is that two particles can exist in the same location. Two particles can also *freeze* in the same location.
 
+    This can be solved by using what are called atomic operations. These are operations that sync up with every other GPU core, effectively reintroducing sequential logic. Thankfully, for the first time, we don't need this. Since randomness isn't malevolent to the outcome of the algorithm in any way, its 100% ok to lose a few particles. Atomics are useful, and we'll touch on them in a bit.
+
+   We can begin writing the scripts in C# and HLSL to run a single iteration of this algorithm. It utilizes the append and consume buffers *and* the StructureBuffers we touched on earlier. It goes as follows.
+
+  ```csharp
+  void iterateDLA()
+  {
+      //aliveParticlesB is our append buffer; it is initially empty
+      aliveParticlesB.SetCounterValue(0);
+
+      //particleCountBuffer stores the particles in our consume buffer, and is used to prevent indexing out of bounds
+      ComputeBuffer.CopyCount(aliveParticlesA, particleCountBuffer, 0);
+
+      //we'll get to why these are here...
+      DLAShader.SetFloat("timer", Time.time);
+      DLAShader.SetInt("currentStep", DLAStep);
+  
+      //prepare buffers
+      DLAShader.SetBuffer(performID, "_Args", particleCountBuffer);
+      DLAShader.SetBuffer(performID, "_writeIndexToParticle", writeIndexToParticle);
+      DLAShader.SetBuffer(performID, "_readIndexToParticle", readIndexToParticle);
+      DLAShader.SetBuffer(performID, "_aliveParticles", aliveParticlesA);
+      DLAShader.SetBuffer(performID, "_nextFrameParticles", aliveParticlesB);
+
+      //run iteration
+      DLAShader.Dispatch(performID, Mathf.CeilToInt(_GPUParticles.Count / 64f), 1, 1);
+  
+      //copy data
+      DLAShader.Dispatch(copyID, Mathf.CeilToInt(vertices.Count / 64f), 1, 1);//copies writeIndex into readIndex
+
+      //ping-pong
+      ComputeBuffer temp = aliveParticlesA;
+      aliveParticlesA = aliveParticlesB;
+      aliveParticlesB = temp;
+  }
+  ```
+
+  ```hlsl
+  #pragma kernel performDLA
+  
+  [numthreads(64,1,1)]
+  void performDLA(uint3 id : SV_DispatchThreadID)
+  {
+     if (id.x >= _Args[0]) return; //prevents indexing out of bounds
+  
+     particle p = _aliveParticles.Consume();
+     if (p.isMobile != 1)
+     {
+         _deadParticles.Append(p);
+         return; //frozen particles shouldn't move
+     }
+     
+     int delIdx = floor(rng(p.idx, 2, p.particleRNG) * 6);//chooses random direction to move in
+
+     int nextIdx = _neighbors[p.idx * 6 + delidx];
+     //moves particle index to one of its neighbors
+     //multiplies by 6 because each vertex is surrounded by a hexagon
+     //however 12 vertices on the planet have 5 neighbors, being the 12 initial icosohedron points
+     //so those invalid indices are -1
+  
+     if (nextIdx != -1)
+     { 
+         delIdx = p.idx;//reuse variable to store old position in case bouncing
+         p.idx = nextIdx;
+     }
+     for (int i = 0; i < 6; i++)
+     {
+         int neighborIdx = _neighbors[p.idx * 6 + i];
+         if (neighborIdx == -1)
+             continue;
+         float height = _readIndexToParticle[neighborIdx].magnitude;
+
+         //only frozen points will have a magnitude
+         //initially, this is only the seeds
+         //value of magnitude is the strength of seed's tectonic collision
+  
+         if (height > 0)//heights has a magnitude! Collided!
+         {
+             p.frozenIndex = neighborIdx;
+             p.magnitude = height;
+             break;
+         }
+     }
+     
+     p.isMobile = (int) (p.magnitude < rng(p.idx, 3, p.particleRNG));
+     //higher magnitude yields higher chance of freezing
+     //lower magnitude introduces chance of bouncing
+     //in DLA, this is known as stickiness
+     //causes fuzzier and smaller branches if bouncier
+     //this means magnitude correlates to both height and sprawl of a mountain
+  
+     if (p.isMobile == 1 && p.magnitude != 0)//i.e., bounced
+     {
+         p.idx = delIdx; //moves the particle to its previous position
+         p.magnitude = 0;
+         p.frozenIndex = -1;
+         _nextFrameParticles.Append(p);
+         return;
+     }
+     else if (p.magnitude == 0 && p.isMobile == 1)//i.e., still moving as normal
+     {
+         _nextFrameParticles.Append(p);
+         return;
+     }
+     else if (p.isMobile != 1 && p.magnitude == 0)
+     {
+         //particle should never get here
+         //give it an invalid magnitude, will cause graphical errors and alert user of error
+         p.magnitude = -1;
+         _deadParticles.Append(p);
+     }
+     else //froze!
+     {
+         _deadParticles.Append(p);
+         _writeIndexToParticle[p.idx] = p;
+         return;
+     }
+
+     //a particle should never get here
+     //give it an invalid magnitude, will cause graphical errors and alert user of error
+     p.magnitude = -1;
+     _deadParticles.Append(p);
+     return;
+  } 
+  ```
+
+    These are both quite a handful. Before I move on to other kernels, take a look at the RNG function called a few times. HLSL does not supply its humble coders with an undeterministic rng function. This means we need to create our own hash based function, and this *also* means it will be deterministic. For now, I am using a hash based on an article I read, linked below. In the future, I might add a chapter where I create my own. If I do that, I think it would be neat to make the random functions noise based, so I can reproduce a planet's result based on a specific seed. Then, I could populate a reproducable universe not dissimilar to No Man's Sky.
+
+   ```hlsl
+    // PCG 32-bit hash (Reed / Jarzynski & Olano)
+    uint pcg_hash(uint v)
+    {
+        uint state = v * 747796405u + 2891336453u;
+        uint word  = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+        return (word >> 22u) ^ word;
+    }
+    
+    float rng(uint input, uint call, float RN)
+    {
+        uint t = (uint)(timer * 12345.678f);
+        uint rn = (uint)(saturate(RN) * 16777215.0f); // 2^24 - 1
+    
+        uint seed = 0u;
+        seed ^= input;
+        seed ^= call * 0x9E3779B9u;
+        seed ^= (uint)currentStep * 0x85EBCA6Bu;
+        seed ^= t * 0xC2B2AE35u;
+        seed ^= rn * 0x27D4EB2Du;
+    
+        // Hash twice for extra diffusion
+        uint h = pcg_hash(seed);
+        h = pcg_hash(h ^ (input + 0xB5297A4Du));
+    
+        // Convert to 0,1
+        return (float)h * (1.0f / 4294967296.0f);
+    }
+
+   ```
+
+  The performDLA kernel is one of the five kernels used during the DLA process. The other four are smaller, following similar patterns. The next challenge was to assign every particle a step, or how high into the mountain range it was. Each particle in a mountain stores the same magnitude, as that represents the height and sprawl of that mountain; but that is data for the mountain as a whole, not for each particle in the mountain.
+
+    As with all problems we've discussed thus far, it was upsettingly more complicated than I first figured. Initially, I recorded which iteration of the DLA algorithm a particle froze at. While not a terrible idea, if two mountains generated simultaneously, and one froze faster than the other, the first mountain's base wouldn't converge into the ground, instead hovering awkwardly.
+
+  By my thid solution, I succeeded--it just took a whole lotta persistance. I knew I wanted to record a simple question for each particle: how many steps away from a base particle am I?
+
+  I essentially came up with a "linked list" out of pointers. The idea is that each base-node has an exact step of 1. Then, every other node (which must have children) will have their step value equal to childStep + 1. If they had multiple children, take the maximum. The idea is to run the script a number of times until the step information has propogated from the base nodes to the seeds.
+
+  If you go back to the particle struct I proposed earlier, you'll notice eldestChild and youngerSibling. These were part of a failed attempt. The idea was for each particle to have a pointer to it's child index and also a pointer to any younger siblings it had. Then, as a string ends with \0 and a linked list ends with null, my mock list would end with -1. If I ever read a -1, I knew to terminate that chain of children. It was done this way because a particle could have anywhere from 1 - 5 children, and this was the simplest way to find them (to me at least).
+
+  Unfortunately, excited as I was about this solution, the GPU struck again. If two particles froze to a parent at the same time, they had a chance of labeling *each other* as their younger siblings. This created an infinite loop. It could have been solved with atomics, but I came up with a better solution.
+
+  I replaced both children pointers with a pointer to a particles parent, and effectively reversed the process I came up with. Instead of a particle's step determined by it's children, a particle's parent was determined by the particle. That might sound ridiculous at first, but think about it. Instead of a chain of pointers, I only needed one. I read data from any given particle, and if they have a parent I write data *to the parent*. This solution was so much more straightforward. I still had to use atomics, but they were easy to iplement and didn't have imply lingering problems.
+
+   ```hlsl
+  #pragma kernel propogateSteps
+  
+  [numthreads(64, 1, 1)]
+  void propogateSteps(uint3 id : SV_DispatchThreadID)
+  {    
+      if (id.x >= _Args[0])
+          return;
+   
+      particle q = _aliveParticles.Consume();
+      particle p = _readIndexToParticle[q.idx];
+      //_readIndexToParticle is more up to date
+      //and will finish the algorithm faster
+      //however _aliveParticles can perfectly
+      //summon all old particles, who keep the same index data
+      
+      int parent = p.frozenIndex;
+   
+      if (parent != -1 && _readIndexToParticle[parent].step < p.step + 1)
+      {
+          InterlockedMax(_writeIndexToParticle[parent].step, p.step + 1);
+          //interlockedmax is the atomic function, which keeps the max value
+   
+          finishedElevating[0] = 0;
+          //finishedElevating is sent back to the CPU every 20 iterations
+          //to prevent superfluous algorithm calls
+      }
+      _deadParticles.Append(p);
+      //_writeIndexToParticle[p.idx] = p;
+  }
+  ```
+
+  
 
 ## Future Additions
 I hope to update this page every 2 weeks, as I have a number of additional "phases" planned.
