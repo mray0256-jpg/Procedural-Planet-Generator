@@ -32,7 +32,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Equation for number of vertices
 
-    $\ (12+30(numSubs))+\sum_{n=1}^{numSubs}20(n-1)
+    $\ (12+30(numSubs))+\sum_{n=1}^{numSubs}20(n-1) $
 
     with the approximation
 
@@ -40,13 +40,13 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Then, using the vertices we can generate faces
     
-    40\frac{x(x+1)}{2}+20(x+1)
+    $\ 40\frac{x(x+1)}{2}+20(x+1) $
 
     with the approximation
 
     $\ 20(numSubs)^2 $
 
-    Where both approximations are accurate to $\ log_{10}(numSubs) $ digits.
+    Where both approximations are accurate to $\log_{10}(numSubs)$ digits.
 
  <img width="502" height="282" alt="Screenshot 2025-12-23 111339" src="https://github.com/user-attachments/assets/1410552d-5ebd-4ad2-8671-26d51ba5620b" /><br>
    *Figure 2: Subdivided Icosohedron with Normalized Radius & Vertex Visuals*
@@ -119,74 +119,91 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
      *Figure 7: Tectonic Plates with Visual Aids*
 
 - **Phase 3: Mountains & Terrain**
-  The next, and perhaps the most challenging, step of the planet generation was terrain. As you'll see, this has taken me far more time than the previous two sections. Before I begin, however, I'd like to update some of the previous code and preface this phase with some remarks. First, in order to add terrain, I wanted the planet to support far more vertices than currently tractable. My sphere generator from phase one was not cutting it; it was generating at a horrible rate of O(n^2)! This was because points along the borders of the initial icosphere would overlap during the subdivision function. At the time, I put in a temporary solution to find duplicate points and only keep the first point. Before writing my mountain generator, I "fixed" this. Eventually, I'll probably spruce things up and house certain mesh related data on the GPU, but for now I simply used a dictionary. Keys are vertex vectors, so duplicates can't be added. The return value is an index, which will always correspond to the first instance of the given vector/vertex. This was necessary because in my original subdivision method I calculate things via indices that may or may not be duplicates, and I didn't feel like rewriting it. Now the script runs in O(n), and generates hundreds of thousands of vertices with no problem.
+- 
+  The next, and perhaps the most challenging, step of the planet generation was terrain. As you'll see, this has taken me far more time than the previous two sections. Before I begin, however, I'd like to update some of the previous code and preface this phase with some remarks.
 
-  Additionally, I had to fix the equations for calculating the collisions of tectonic plates. This seemed like an obvious problem, but wound up being quite a thorn. The issue with the last version was that it took two *vertices* and compared their direction vectors, when it should have compared their movement with the normal vector of the plate bound. If it had compared *faces*, the solution would have been correct. My first attempt at fixing this simply took the normal of the line seperating boundary points, but, as you'll notice in the images above, the boundaries are jagged. This resulted in magnitudes drastically changing from line to line. The second attempt involved looking at the boundary points' neighbors. They always share two distinct neighbors. The vast majority of the time, one or both of these neighbors will also share tectonic plates with one of the boundary points. If a boundary and neighbor point belong to the same tectonic plate, I can find the normal of *that* line and it will be the correct normal of the tectonic plate itself. Using a corrected normal, I compared it with the difference of our original boundary vectors by taking a dot product. This results in accurate collision magnitudes. The tectonics generator is still in need of some good ol' optimization, but for now I'm satisfied.
+  First, in order to add terrain, I wanted the planet to support far more vertices than currently tractable. My sphere generator from phase one was not cutting it; it was generating at a horrible rate of O(n^2)! This was because points along the borders of the initial icosphere would overlap during the subdivision function. At the time, I put in a temporary solution to find duplicate points and only keep the first point. Before writing my mountain generator, I "fixed" this. Eventually, I'll probably spruce things up and house certain mesh related data on the GPU, but for now I simply used a dictionary. Keys are vertex vectors, so duplicates can't be added. The return value is an index, which will always correspond to the first instance of the given vector/vertex. This was necessary because in my original subdivision method I calculate things via indices that may or may not be duplicates, and I didn't feel like rewriting it. Now the script runs in O(n), and generates hundreds of thousands of vertices with no problem.
+
+  Additionally, I had to fix the equations for calculating the collisions of tectonic plates. This seemed like an obvious problem, but wound up being quite a thorn. The issue with the last version was that it took two *vertices* and compared their direction vectors, when it should have compared their movement with the normal vector of the plate bound. If it had compared *faces*, the solution would have been correct. My first attempt at fixing this simply took the normal of the line seperating boundary points, but, as you'll notice in the images above, the boundaries are jagged. This resulted in magnitudes drastically changing from line to line.
+
+  The second attempt involved looking at the boundary points' neighbors. They always share two distinct neighbors. The vast majority of the time, one or both of these neighbors will also share tectonic plates with one of the boundary points. If a boundary and neighbor point belong to the same tectonic plate, I can find the normal of *that* line and it will be the correct normal of the tectonic plate itself. Using a corrected normal, I compared it with the difference of our original boundary vectors by taking a dot product. This results in accurate collision magnitudes. The tectonics generator is still in need of some good ol' optimization, but for now I'm satisfied.
 
    Be warned, this phase isn't yet finished. At the end I'll walk through the changes and additions I intend on making, but I decided now is a good time to record my progress. Also, my usual work is pretty math-centric, but this time I decided I should challenge myself on the coding side. I wrote the terrain generator almost entirely on the GPU using Unity's compute shaders and HLSL.
 
- - *3.1: DLA*
+ - **3.1: DLA**
 
-   The inital chapter of this phase was writing a massive DLA algorithm that could generate mountains. Diffusion-Limited Aggregation, or DLA, is an algorithm intended to replicate the dendritic fractal shape that resembles coral, lightning, veins, zinc synthesis, and (fortunately for us) mountain ridges. At a high level, this pattern is then taken and blurred until it is a heightmap that sufficiently mirrors a mountain. Traditionally, to run this algorithm a sequential process is used. A heightmap, commonly a texture, is given seeds as desired. These are hand placed "frozen" particles. Then, a new mobile particle is spawned at an arbitrary location. It wanders entirely randomly until a neighboring point happens to be one of these frozen particles. Then, the new particle freezes, sticking to the frozen particle, and the process repeats. By simulating the random walking, mesmerizing leichtenburg-like figures are generated. However: this approach comes with a few major problems, namely that it is horribly inefficient. By generating one particle at a time and giving it tremendous amounts of space to walk, it could take *thousands* of iterations for even one particle to freeze. I found a fantastic resource, linked below, walking through this mountain technique. Their solution was to use a process of upscaling and blurring, but it still took place entirely on the CPU. Perhaps it was fast, but I challenged myself to make it *fast*. I decided to tackle a challenge they deemed impossible: coding as much of the algorithm as I could on the GPU.
+   The inital chapter of this phase was writing a massive DLA algorithm that could generate mountains. Diffusion-Limited Aggregation, or DLA, is an algorithm intended to replicate the dendritic fractal shape that resembles coral, lightning, veins, zinc synthesis, and (fortunately for us) mountain ridges. At a high level, this pattern is then taken and blurred until it is a heightmap that sufficiently mirrors a mountain. Traditionally, to run this algorithm a sequential process is used. A heightmap, commonly a texture, is given seeds as desired. These are hand placed "frozen" particles. Then, a new mobile particle is spawned at an arbitrary location. It wanders entirely randomly until a neighboring point happens to be one of these frozen particles. Then, the new particle freezes, sticking to the frozen particle, and the process repeats.
+
+   By simulating the random walking, mesmerizing leichtenburg-like figures are generated. However: this approach comes with a few major problems, namely that it is horribly inefficient. By generating one particle at a time and giving it tremendous amounts of space to walk, it could take *thousands* of iterations for even one particle to freeze. I found a fantastic resource, linked below, walking through this mountain technique. Their solution was to use a process of upscaling and blurring, but it still took place entirely on the CPU. Perhaps it was fast, but I challenged myself to make it *fast*. I decided to tackle a challenge they deemed impossible: coding as much of the algorithm as I could on the GPU.
 
 - **How it's done:**  
 
- I started by creating a struct to store the data of each particle.
+    I started by creating a struct to store the data of each particle.
  
-  '''hlsl
-struct particle
-{
-    int idx; //coincident vertex index
-    int isMobile; //to freeze a particle
-    int frozenIndex; //points to parent
-    int step;
-    int headChild; //points to this particles FIRST child
-    int youngerSibling; //a pointer for this particle next youngest sibling
-    float magnitude; //used for stickiness & max height
-    float particleRNG;
-};
-  '''
+    '''hlsl
+    struct particle
+    {
+       int idx; //coincident vertex index
+       int isMobile; //to freeze a particle
+       int frozenIndex; //points to parent
+       int step;
+       int headChild; //points to this particles FIRST child
+       int youngerSibling; //a pointer for this particle next youngest sibling
+       float magnitude; //used for stickiness & max height
+       float particleRNG;
+    };
+    '''
 
-  The user can create as many particles as they want; more correlates with larger, sprawling mountains. They can also dictate how many seeds they would like to begin with. Once all of these ingredients are prepared, they're sent to the GPU to become a rather scrumptious mountain. Surpisingly, this was the most difficult part. The GPU is wonderful because it can run thousands of kernels, or functions, in parallel. The GPU is simultaneously the bane of my existance, because it is so limited in its ability. A problem that quickly arose was sending data. In the hardware, there exists a bus that can transport signals to and fro. Naturally, as the bus becomes overcrowded, its propensity to create a bottleneck becomes apparent. The intuition is then to segregate data, using the bus as conservatively as possible. However, this route also introduces complexity. As is inexorable with every coder, I gleefully marched down the complexity route, ignorant of its poisons.
+  The user can create as many particles as they want; more correlates with larger, sprawling mountains. They can also dictate how many seeds they would like to begin with. Once all of these ingredients are prepared, they're sent to the GPU to become a rather scrumptious mountain. Surpisingly, transportation the most difficult part. The GPU is wonderful because it can run thousands of kernels, or functions, in parallel. The GPU is simultaneously the bane of my existance, because it is so limited in its ability. In the hardware, there exists a bus that can transport signals to and fro. Naturally, as the bus becomes overcrowded, its propensity to create a bottleneck becomes apparent. The intuition is then to segregate data, using the bus as conservatively as possible. However, this route also introduces complexity. As is predestined with every coder, I gleefully marched down the complexity route, blissfully ignorant of its poisons.
 
-  Before I finish that age old tale, let's discuss compute shaders in Unity. Untiy uses C# for CPU scripts and HLSL for GPU scripts. Pretty simple. Both are maintained by microsoft, and surely that'd mean they both had a wealth of documentation. Unfortunately, that did not wind up being the case. To send data to a Compute Shader, you use what's called a compute buffer. They house arrays of whatever you'd like. For example, I send the particles via a ComputeBuffer. HLSL recieves this, and on the GPU side it can be stored as a few different types of buffers. The common ones are RWStructuredBuffer and StructuredBuffer. The only difference is whether they can be written to. These buffers are great when you know their exact dimensions and which indices to read and which to skip, if necessary. I met an issue with them, though. I want to freeze some particles and reuse others. If I kept all particles in one giant RWStructuredBuffer, and there were 100,000 particles, when there's one particle left the other 99,999 would still have to run! That's not exactly ideal. Luckily for me, there exists another type of buffer: an append buffer. These can either be consumed from or appended to, and they have a special counter that tracks valid members. Their CPU analog would be a list. Now that we have dynamic data structures on the GPU, we can simply use the counter inside to run the GPU cores efficiently. At least, that's the idea. This is where my problem was introduced. 
+  Before I finish that age old tale, let's discuss compute shaders in Unity. 
   
-  To begin a function on the GPU, it must be dispatched on C#. The C# dispatch call has to tell the GPU precisely how many groups (e.g., iterations) should be run. Now, if I have a dynamic buffer, I no longer know how many members there are, so I don't know how many iterations should be run. (For context, each "iteration" consumes a particle from the append buffer). Unity kindly supplies us with a special type of dispatching, though, called DispatchIndirect. This type of function calling does not require the group count from the CPU, and instead supplies the group count from a buffer. Once buffers are set, their data is stored within the GPU's VRAM, which makes it O(1) to call. To use dispatch indirect, I first used another function called CopyCount. This takes the append buffer's hidden counter and stores that value inside a different buffer, as a usable element. Now, when dispatch indirect is called, if the group count parameter is the buffer from copycount, it should store an accurate number of iterations. In the end... this didn't work. I still am not sure why, but some way or another DispatchIndirect and CopyCount never worked as intended. It was almost certainly user error of some kind, as this was my first time using compute shaders, but I couldn't find much help online, and forum posts suggested DispatchIndirect had been broken or buggy in the past. If something I've described is erroneous, please reach out! This repository is meant to document learning, not mastery.
-
-  To fix the bus issues, I replaced every usage of DispatchIndirect with my own special counter. I used CopyCount into a RW buffer called "_Args", which stored one element: a uint describing the number of particles intended to be manipulated. In every kernel that used consume and append buffers, I added a simple bounds checker with _Args and would return if a particle was decidedly null (the GPU has no built in null check). This describes most of the bus-related issues, but there were two more. Let's talk about race conditions. If you have an array, say particles[], and you read data from the array and replace that data in the same function, what happens on the GPU but wouldn't on a CPU? That's right: garbage! Since every particle is acted on simultaneously, if one is modified as a different thread reads that data, it will read the wrong data. If that data is then used in a calculation, something might be a little bit off. If that repeats 100,000 times, the problem will exponentially exacerbate! In my case, it resulted in particles overriding each other and data becoming corrupted. To amend this, we seperate particles[] into readParticles[] and writeParticles[]. If we never modify read particles, every thread will check the same data. Great! However, on the next iteration, they're reading old data. At the end of each cycle, readParticles[] must change into an exact copy of writeParticles[], so that frame's data corrcectly examines what was written last frame. Now, before we find a solution to this, lets discuss a very similar problem. I said in the previous paragraph my data was stored in an append buffer. That means when all of the present frame's data has been consumed, that buffer will have a counter value of 0. Conversely, the append buffer collecting data will have a counter value of numParticles. At the end of the frame, I can perform what's called ping-ponging. I can simply copy the append data back into the consume buffer, and vice versa.
+   *"Compute shaders can be unbelievably fast, but they also have this distressing habit of finding new and creative ways of crashing my computer, so it's a bit of a love-hate relationship." - Sebastian Lague*
   
-  '''CSharp
-  //ping-ponging example
- ComputeBuffer temp = aliveParticlesA;
- aliveParticlesA = aliveParticlesB;
- aliveParticlesB = temp;
+  Untiy uses C# for CPU scripts and HLSL for GPU scripts. Pretty simple. Both are maintained by microsoft, and surely that'd mean they both had a wealth of documentation. Unfortunately, that did not wind up being the case. To send data to a Compute Shader, you use what's called a compute buffer. They house arrays of whatever you'd like. For example, I send the particles via a ComputeBuffer. HLSL recieves this, and on the GPU side it can be stored as a few different types of buffers. The common ones are RWStructuredBuffer (read-write) and StructuredBuffer (read only). These buffers are great when you know their exact dimensions and exactly which indices to read.
+  
+  I met an issue, though. I want to freeze some particles and reuse others. Say I kept all particles in one giant RWStructuredBuffer, and there were 100,000 particles. When there's one particle left the other 99,999 would still have to run! That's not exactly ideal. Luckily for me, there exists another type of buffer: an append buffer. These can either be consumed from or appended to, and they have a special counter that tracks valid members. Their CPU analog would be a list. Now that we have dynamic data structures on the GPU, we can simply use the counter inside to run the GPU cores efficiently. At least, that's the idea. This is where my problem was introduced. 
+  
+  To begin a function on the GPU, it must be dispatched on C#. The C# dispatch call has to tell the GPU precisely how many groups (e.g., iterations) should be run. Now, if I have a dynamic buffer, I no longer know how many members there are, so I don't know how many iterations should be run. (For context, each "iteration" consumes a particle from the append buffer). Unity kindly supplies us with a special type of dispatching, though, called DispatchIndirect. This type of function calling does not require the group count from the CPU, and instead supplies the group count from a buffer. Once buffers are set, their data is stored within the GPU's VRAM, which makes it O(1) to call.
 
-//now to set the data
-  aliveParticlesB.SetCounterValue(0);//ensures our append buffer is empty
- DLAShader.SetBuffer(performID, "_aliveParticles", aliveParticlesA);
- DLAShader.SetBuffer(performID, "_nextFrameParticles", aliveParticlesB); //buffers must be recalled for GPU. Just because the CPU pointer changed doesn't mean the VRAM pointer did
-  '''
+  To use dispatch indirect, I first used another function called CopyCount. This takes the append buffer's hidden counter and stores that value inside a different buffer, as a usable element. Now, when dispatch indirect is called, if the group count parameter is the buffer from copycount, it should store an accurate number of iterations. In the end... this didn't work. I still am not sure why, but some way or another DispatchIndirect and CopyCount never worked as intended. It was almost certainly user error of some kind, as this was my first time using compute shaders, but I couldn't find much help online, and forum posts suggested DispatchIndirect had been broken or buggy in the past. If something I've described is erroneous, please reach out! This repository is meant to document learning, not mastery.
+
+  To fix the bus issues, I replaced every usage of DispatchIndirect with my own special counter. I used CopyCount into a RW buffer called "_Args", which stored one element: a uint describing the number of particles intended to be manipulated. In every kernel that used consume and append buffers, I added a simple bounds checker with _Args and would return if a particle was decidedly null (the GPU has no built in null check). This describes most of the bus-related issues, but there were two more. Let's talk about race conditions. If you have an array, say particles[], and you read data from the array and replace that data in the same function, what happens on the GPU but wouldn't on a CPU? That's right: garbage! Since every particle is acted on simultaneously, if one is modified as a different thread reads that data, it will read the wrong data. If that data is then used in a calculation, something might be a little bit off. If that repeats 100,000 times, the problem will exponentially exacerbate! In my case, it resulted in particles overriding each other and data becoming corrupted.
+
+  To amend this, we seperate particles[] into readParticles[] and writeParticles[]. If we never modify read particles, every thread will check the same data. Great! However, on the next iteration, they're reading old data. At the end of each cycle, readParticles[] must change into an exact copy of writeParticles[], so that frame's data corrcectly examines what was written last frame. Now, before we find a solution to this, lets discuss a very similar problem. I said in the previous paragraph my data was stored in an append buffer. That means when all of the present frame's data has been consumed, that buffer will have a counter value of 0. Conversely, the append buffer collecting data will have a counter value of numParticles. At the end of the frame, I can perform what's called ping-ponging. I can simply copy the append data back into the consume buffer, and vice versa.
+  
+    '''CSharp
+    //ping-ponging example
+    ComputeBuffer temp = aliveParticlesA;
+    aliveParticlesA = aliveParticlesB;
+    aliveParticlesB = temp;
+
+    //now to set the data
+    aliveParticlesB.SetCounterValue(0);//ensures our append buffer is empty
+    DLAShader.SetBuffer(performID, "_aliveParticles", aliveParticlesA);
+    DLAShader.SetBuffer(performID, "_nextFrameParticles", aliveParticlesB); //buffers must be recalled for GPU. Just because the CPU pointer changed doesn't mean the VRAM pointer did
+    '''
   
   Now, the consume buffer contains numParticles particles to run and the append buffer is empty, and therefore ready to collect. Fantastic! If we look back at what a regular buffer might look like, in the case of readParticles[], and try to do this, we discover complications. Truly, our woes know no bounds. When we ping-pong, both arrays swap. This is convenient because it occurs in C# as shown above, and makes dispatching and controlling data precise and easy. For our arrays however, we want to fully copy writeParticles[] *into* readParticles[], not swap the two. Since their data exists on VRAM, we can't access this in C# without overcrowding our bus route and diminishing efficiency. So, we write a new GPU kernel to do this for us, and dispatch it with the known, fixed size of particles.
 
-  '''CSharp
-DLAShader.SetBuffer(copyID, "_writeIndexToParticle", writeIndexToParticle);//these arrays contain all indices of the mesh/submesh the algorithm is running on.
-DLAShader.SetBuffer(copyID, "_readIndexToParticle", readIndexToParticle);//some vertices have particles, some don't. These are used to store our heightmap relative to the vertices.
+    '''CSharp
+    DLAShader.SetBuffer(copyID, "_writeIndexToParticle", writeIndexToParticle);//these arrays contain all indices of the mesh/submesh the algorithm is running on.
+    DLAShader.SetBuffer(copyID, "_readIndexToParticle", readIndexToParticle);//some vertices have particles, some don't. These are used to store our heightmap relative to the vertices.
 
-DLAShader.Dispatch(copyID, Mathf.CeilToInt(vertices.Count / 64.0f), 1, 1);
-  '''
+    DLAShader.Dispatch(copyID, Mathf.CeilToInt(vertices.Count / 64.0f), 1, 1);
+    '''
 
-  '''hlsl
-#pragma kernel shallowCopy
+    '''hlsl
+    #pragma kernel shallowCopy
 
-[numthreads(64, 1, 1)]
-void shallowCopy(uint3 id : SV_DispatchThreadID)
-{
-    if (id.x >= (uint) numVertices) return;
-    particle p = _writeIndexToParticle[id.x];
-    _readIndexToParticle[id.x] = p;
-}
-  '''
+    [numthreads(64, 1, 1)]
+    void shallowCopy(uint3 id : SV_DispatchThreadID)
+    {
+        if (id.x >= (uint) numVertices) return;
+        particle p = _writeIndexToParticle[id.x];
+        _readIndexToParticle[id.x] = p;
+    }
+    '''
 
   
 
