@@ -32,21 +32,21 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Equation for number of vertices
 
-    $\ (12+30(numSubs))+\sum_{n=1}^{numSubs}20(n-1) $
+    $\ 12+30(n)+20(\frac{n(n+1)}{2})$
 
     with the approximation
 
-    $\ 10(numSubs)^2 $
+    $\ 10(n)^2 $
 
     Then, using the vertices we can generate faces
     
-    $\ 40\frac{x(x+1)}{2}+20(x+1) $
+    $\ 40\frac{n(n+1)}{2}+20(n+1) $
 
     with the approximation
 
-    $\ 20(numSubs)^2 $
+    $\ 20(n)^2 $
 
-    Where both approximations are accurate to $\log_{10}(numSubs)$ digits.
+    where n is the number of subdivisions and both approximations are accurate to $\log_{10}(n)$ digits.
 
  <img width="502" height="282" alt="Screenshot 2025-12-23 111339" src="https://github.com/user-attachments/assets/1410552d-5ebd-4ad2-8671-26d51ba5620b" /><br>
    *Figure 2: Subdivided Icosohedron with Normalized Radius & Vertex Visuals*
@@ -180,15 +180,19 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     //now to set the data
     aliveParticlesB.SetCounterValue(0);//ensures our append buffer is empty
+    
+    //buffers must be recalled for GPU. Just because the CPU pointer changed doesn't mean the VRAM pointer did
     DLAShader.SetBuffer(performID, "_aliveParticles", aliveParticlesA);
-    DLAShader.SetBuffer(performID, "_nextFrameParticles", aliveParticlesB); //buffers must be recalled for GPU. Just because the CPU pointer changed doesn't mean the VRAM pointer did
+    DLAShader.SetBuffer(performID, "_nextFrameParticles", aliveParticlesB); 
     ```
   
   Now, the consume buffer contains numParticles particles to run and the append buffer is empty, and therefore ready to collect. Fantastic! If we look back at what a regular buffer might look like, in the case of readParticles[], and try to do this, we discover complications. Truly, our woes know no bounds. When we ping-pong, both arrays swap. This is convenient because it occurs in C# as shown above, and makes dispatching and controlling data precise and easy. For our arrays however, we want to fully copy writeParticles[] *into* readParticles[], not swap the two. Since their data exists on VRAM, we can't access this in C# without overcrowding our bus route and diminishing efficiency. So, we write a new GPU kernel to do this for us, and dispatch it with the known, fixed size of particles.
 
     ```csharp
-    DLAShader.SetBuffer(copyID, "_writeIndexToParticle", writeIndexToParticle);//these arrays contain all indices of the mesh/submesh the algorithm is running on.
-    DLAShader.SetBuffer(copyID, "_readIndexToParticle", readIndexToParticle);//some vertices have particles, some don't. These are used to store our heightmap relative to the vertices.
+    //these arrays contain all indices of the mesh/submesh the algorithm is running on
+    //some vertices have particles, some don't. These are used to store our heightmap relative to the vertices
+    DLAShader.SetBuffer(copyID, "_writeIndexToParticle", writeIndexToParticle);
+    DLAShader.SetBuffer(copyID, "_readIndexToParticle", readIndexToParticle);
 
     DLAShader.Dispatch(copyID, Mathf.CeilToInt(vertices.Count / 64.0f), 1, 1);
     ```
