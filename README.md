@@ -140,7 +140,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     I started by creating a struct to store the data of each particle.
  
-    '''hlsl
+    ```hlsl
     struct particle
     {
        int idx; //coincident vertex index
@@ -152,7 +152,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
        float magnitude; //used for stickiness & max height
        float particleRNG;
     };
-    '''
+    ```
 
   The user can create as many particles as they want; more correlates with larger, sprawling mountains. They can also dictate how many seeds they would like to begin with. Once all of these ingredients are prepared, they're sent to the GPU to become a rather scrumptious mountain. Surpisingly, transportation the most difficult part. The GPU is wonderful because it can run thousands of kernels, or functions, in parallel. The GPU is simultaneously the bane of my existance, because it is so limited in its ability. In the hardware, there exists a bus that can transport signals to and fro. Naturally, as the bus becomes overcrowded, its propensity to create a bottleneck becomes apparent. The intuition is then to segregate data, using the bus as conservatively as possible. However, this route also introduces complexity. As is predestined with every coder, I gleefully marched down the complexity route, blissfully ignorant of its poisons.
 
@@ -172,7 +172,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
   To amend this, we seperate particles[] into readParticles[] and writeParticles[]. If we never modify read particles, every thread will check the same data. Great! However, on the next iteration, they're reading old data. At the end of each cycle, readParticles[] must change into an exact copy of writeParticles[], so that frame's data corrcectly examines what was written last frame. Now, before we find a solution to this, lets discuss a very similar problem. I said in the previous paragraph my data was stored in an append buffer. That means when all of the present frame's data has been consumed, that buffer will have a counter value of 0. Conversely, the append buffer collecting data will have a counter value of numParticles. At the end of the frame, I can perform what's called ping-ponging. I can simply copy the append data back into the consume buffer, and vice versa.
   
-    '''CSharp
+    ```csharp
     //ping-ponging example
     ComputeBuffer temp = aliveParticlesA;
     aliveParticlesA = aliveParticlesB;
@@ -182,18 +182,18 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     aliveParticlesB.SetCounterValue(0);//ensures our append buffer is empty
     DLAShader.SetBuffer(performID, "_aliveParticles", aliveParticlesA);
     DLAShader.SetBuffer(performID, "_nextFrameParticles", aliveParticlesB); //buffers must be recalled for GPU. Just because the CPU pointer changed doesn't mean the VRAM pointer did
-    '''
+    ```
   
   Now, the consume buffer contains numParticles particles to run and the append buffer is empty, and therefore ready to collect. Fantastic! If we look back at what a regular buffer might look like, in the case of readParticles[], and try to do this, we discover complications. Truly, our woes know no bounds. When we ping-pong, both arrays swap. This is convenient because it occurs in C# as shown above, and makes dispatching and controlling data precise and easy. For our arrays however, we want to fully copy writeParticles[] *into* readParticles[], not swap the two. Since their data exists on VRAM, we can't access this in C# without overcrowding our bus route and diminishing efficiency. So, we write a new GPU kernel to do this for us, and dispatch it with the known, fixed size of particles.
 
-    '''CSharp
+    ```csharp
     DLAShader.SetBuffer(copyID, "_writeIndexToParticle", writeIndexToParticle);//these arrays contain all indices of the mesh/submesh the algorithm is running on.
     DLAShader.SetBuffer(copyID, "_readIndexToParticle", readIndexToParticle);//some vertices have particles, some don't. These are used to store our heightmap relative to the vertices.
 
     DLAShader.Dispatch(copyID, Mathf.CeilToInt(vertices.Count / 64.0f), 1, 1);
-    '''
+    ```
 
-    '''hlsl
+    ```hlsl
     #pragma kernel shallowCopy
 
     [numthreads(64, 1, 1)]
@@ -203,7 +203,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
         particle p = _writeIndexToParticle[id.x];
         _readIndexToParticle[id.x] = p;
     }
-    '''
+    ```
 
   
 
