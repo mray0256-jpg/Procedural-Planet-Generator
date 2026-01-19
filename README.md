@@ -32,19 +32,19 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     Equation for number of vertices
 
-    $\ 12+30(n)+20(\frac{n(n+1)}{2})$
+    $\ numVerts = 12+30(n)+20(\frac{n(n+1)}{2})$
 
     with the approximation
 
-    $\ 10(n)^2 $
+    $\ numVerts ≈ 10(n)^2 $
 
     Then, using the vertices we can generate faces
     
-    $\ 40\frac{n(n+1)}{2}+20(n+1) $
+    $\ numFaces = 40\frac{n(n+1)}{2}+20(n+1) $
 
     with the approximation
 
-    $\ 20(n)^2 $
+    $\ numFaces ≈ 20(n)^2 $
 
     where n is the number of subdivisions and both approximations are accurate to $\log_{10}(n)$ digits.
 
