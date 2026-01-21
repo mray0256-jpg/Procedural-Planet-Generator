@@ -416,6 +416,18 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
   }
   ```
 
+    Now that each value stores a step with it, we can use this step as the parameter to a function, determining each particle's base height. The primary function I'd like to use is
+
+    $\ \frac{log_{10}(1+ks)}{log_{10}(1+k)} $
+
+    where k is a tweaking constant and s is the particle's step divided by the maximum amount of steps. This returns a value, 0 to 1, that can be multiplied to the particles preexisting magnitude. This data can then be stored in _writeIndexToParticle, at the index corresponding to the particle's vertex, and used to scale the planet's radius.
+
+    Now, one final step is needed before the heightmap can be applied. If we scaled now, the planet would have *exact* fractals on its surface. To look like a mountain, we need to somehow blur the base of the fractal, but retain it's detailed peaks and ridges.
+
+
+    The blurring was relatively simple. You can mimic a gaussian blur pretty well by modifying a point based on its neighbors, i.e. taking a weighted average. The more blurs, the more the effect will propogate across the planet. However, the more blurs, the more detail is lost as well. To give a mountain it's deserved might, both are needed. I had to ideas that could achieve this. The first involved three buffers. Two were the same read and write buffers, and one simply held the high-res fractal. Then, the high-res version could be blurred multiple times, and each one added and averaged (with weights, of course). The second was simply lerping from 
+
+  
   
 
 ## Future Additions
