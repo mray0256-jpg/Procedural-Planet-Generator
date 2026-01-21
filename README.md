@@ -211,7 +211,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     We finally have all of the underlying infrastructure to begin the actual algorithm. Converting DLA onto the GPU is difficult due its inherent sequential data. We can attempt to ameliorate this by generating *lots* of particles and running one iteration for all of them at once. Recall the race conditions we discussed earlier. The same thing happens here, just in a different form. This time, our problem is that two particles can exist in the same location. Two particles can also *freeze* in the same location.
 
-    This can be solved by using what are called atomic operations. These are operations that sync up with every other GPU core, effectively reintroducing sequential logic. Thankfully, for the first time, we don't need this. Since randomness doesn't mar the outcome of the algorithm in any way, its 100% ok to lose a few particles. Atomics are useful, and we'll touch on them in a bit.
+    This can be solved by using what are called atomic operations. These are operations that sync up with every other GPU core, effectively reintroducing sequential logic. Thankfully, for the first time, we don't need this. Since randomness doesn't mar the outcome of the algorithm, its 100% ok to lose a few particles. Atomics are useful, and we'll touch on them in a bit.
 
    We can begin writing the scripts in C# and HLSL to run a single iteration of this algorithm. It utilizes the append and consume buffers *and* the StructureBuffers we touched on earlier. It goes as follows.
 
