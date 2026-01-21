@@ -364,7 +364,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
         uint h = pcg_hash(seed);
         h = pcg_hash(h ^ (input + 0xB5297A4Du));
     
-        // Convert to 0,1
+        // Convert to 0-1
         return (float)h * (1.0f / 4294967296.0f);
     }
 
@@ -432,7 +432,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     The final step to completing the DLA algorithm was a scaling kernel that would apply the finished heightmap to a vertices array. Then, the planet's mesh is set to that array. Easy!
 
 
-    Now that the algorithm is done, we can mess around with it to our heart's content. Before we delve into the modifications, lets discuss the power of this DLA algorithm. Currently, the algorithm runs on the entire planet mesh, instantly generating mountains with the only variable between them being their height and sprawl. Instead, I could apply it to various submeshes. This will be section 3.2--turning random tectonic collisions into instances of a terrain class. Each will have unique generation parameters for the initial heightmap and broad terrain, and then simulated rainfall and temperature will determine the biome and climate. They will be divided into chunks in a voronoi-like pattern. I have some exciting plans; but for now I'll end this article with snapshots of some of the more creative ways I've hitherto utilize the DLA algorithm.
+    Now that the algorithm is done, we can mess around with it to our heart's content. Before we delve into the modifications, lets discuss the power of this DLA algorithm. Currently, the algorithm runs on the entire planet mesh, instantly generating mountains with the only variable between them being their height and sprawl. Instead, I could apply it to various submeshes. This will be section 3.2--turning random tectonic collisions into instances of a terrain class. Each will have unique generation parameters for the initial heightmap and broad terrain, and then simulated rainfall and temperature will determine the biome and climate. They will be divided into chunks in a voronoi-like pattern. I have some exciting plans; but for now I'll end this article with snapshots of some of the more creative ways I've hitherto utilized the DLA algorithm.
 
   
 list of pictures / gifs: gif of mountain generation, picture of rifts, clamped mountain range, picture of full mountain, gif of full vertices (normalizing?), picture of step logarithmic function, picture of DLA, picture of unprocessed DLA on planet, bad vs good rng, 
