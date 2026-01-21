@@ -186,7 +186,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     DLAShader.SetBuffer(performID, "_nextFrameParticles", aliveParticlesB); 
     ```
   
-  Now, the consume buffer contains numParticles particles to run and the append buffer is empty, and therefore ready to collect. Fantastic! If we look back at what a regular buffer might look like, in the case of readParticles[], and try to do this, we discover complications. Truly, our woes know no bounds. When we ping-pong, both arrays swap. This is convenient because it occurs in C# as shown above, and makes dispatching and controlling data precise and easy. For our arrays however, we want to fully copy writeParticles[] *into* readParticles[], not swap the two. Since their data exists on VRAM, we can't access this in C# without overcrowding our bus route and diminishing efficiency. So, we write a new GPU kernel to do this for us, and dispatch it with the known, fixed size of particles (in reality, the array is the size of our planet's vertices, NOT the number of particles).
+  Now, the consume buffer contains numParticles particles to run and the append buffer is empty, and therefore ready to collect. Fantastic! If we look back at what a regular buffer might look like, in the case of readParticles[], and try to do this, we discover complications. Truly, our woes know no bounds. When we ping-pong, both arrays swap. This is convenient because it occurs in C# as shown above, and makes dispatching and controlling data precise and easy. For our arrays however, we want to fully copy writeParticles[] *into* readParticles[], not swap the two. Since their data exists on VRAM, we can't access this in C# without overcrowding our bus route and diminishing efficiency. So, we write a new GPU kernel to do this for us, and dispatch it with the known, fixed size.
 
     ```csharp
     //these arrays contain all indices of the mesh/submesh the algorithm is running on
@@ -427,7 +427,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     The blurring was relatively simple. You can mimic a gaussian blur pretty well by modifying a point based on its neighbors, i.e. taking a weighted average. The more blurs, the more the effect will propogate across the planet. However, the more blurs, the more detail is lost as well. To give a mountain it's deserved majesty, both are needed. I had to ideas that could achieve this. The first involved three buffers. Two were the same read and write buffers as before, but a new one existed solely to retain the high-res fractal. Then, the high-res version could be blurred multiple times, and each one added and averaged (with weights, of course). The second was easier; lerp the before and after of each blur with some value t. The issue with this one was finding the right t value.
 
-   ^^^TODO: FINISH THIS!!!!
+   ^^^TODO: FINISH THIS!!!! Then read over some of the code explanations and attmept to simplify it
 
     The final step to completing the DLA algorithm was a scaling kernel that would apply the finished heightmap to a vertices array. Then, the planet's mesh is set to that array. Easy!
 
@@ -435,7 +435,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     Now that the algorithm is done, we can mess around with it to our heart's content. Before we delve into the modifications, lets discuss the power of this DLA algorithm. Currently, the algorithm runs on the entire planet mesh, instantly generating mountains with the only variable between them being their height and sprawl. Instead, I could apply it to various submeshes. This will be section 3.2--turning random tectonic collisions into instances of a terrain class. Each will have unique generation parameters for the initial heightmap and broad terrain, and then simulated rainfall and temperature will determine the biome and climate. They will be divided into chunks in a voronoi-like pattern. I have some exciting plans; but for now I'll end this article with snapshots of some of the more creative ways I've hitherto utilize the DLA algorithm.
 
   
-  
+list of pictures / gifs: gif of mountain generation, picture of rifts, clamped mountain range, picture of full mountain, gif of full vertices (normalizing?), picture of step logarithmic function, picture of DLA, picture of unprocessed DLA on planet, bad vs good rng, 
 
 ## Future Additions
 I hope to update this page every 2 weeks, as I have a number of additional "phases" planned.
@@ -449,7 +449,7 @@ I hope to update this page every 2 weeks, as I have a number of additional "phas
 ## Future Improvements
 There are quite a few things in need of another look. The sphere subdivider strangely breaks past 80 subdivisions, or 128000 faces. I initially thought this was due to floating point errros, but my testing didn't seem to confirm that. 
 
-The tectonic plates are a bit of a mess. I am rather considering deleting some of what I wrote on this page, but I've left it to show improvement and thought process. My "blobby sphere" technique is... lets be honest, terrible. My computer is not pleased with that amount of trig passes. Additionally, my equation for the scaling is completely wrong. I'm not sure what happened, but I either miscalculated or it was lost in translation at some point. Anyways, I am rewriting that function to be either noise based spheres or gaussian random particles that I can reuse for caldera, volcano, and crater basins. 
+The tectonic plates are a bit of a mess. I am rather considering deleting some of what I wrote on this page, but I've left it to show improvement and thought process. My "blobby sphere" technique is... lets be honest, terrible. My computer is not pleased with that amount of trig passes. Additionally, my equation for the scaling is completely wrong. I'm not sure what happened, but I either miscalculated or it was lost in translation at some point. Anyways, I am rewriting that function to be either noisy spheres or gaussian random particles that I can reuse for caldera, volcano, and crater basins. 
 
 Thanks for reading! If you noticed any mistakes or would like to contact me, please email me at mray0256@gmail.com. Have a nice day!
 
