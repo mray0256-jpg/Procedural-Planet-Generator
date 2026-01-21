@@ -462,5 +462,4 @@ Thanks for reading! If you noticed any mistakes or would like to contact me, ple
 - Planets: [Devote on Youtube](https://www.youtube.com/watch?v=CeJz8tsgCPw)
 - Making of Outer Wilds: [Documentary by /noclip on Youtube](https://www.youtube.com/watch?v=LbY0mBXKKT0)
 - GPU-based DLA: [Article by Mykola Haltiuk](https://medium.com/@goader_/diffusion-limited-aggregation-in-a-highly-parallel-fashion-using-cuda-954ee66137e2)
-- RNG: [Article by Nathan Reed](https://www.reedbeta.com/blog/hash-functions-for-gpu-rendering/)
-- RNG: [Article by Mark Jarzynski & Marc Oblano](https://jcgt.org/published/0009/03/02/paper.pdf)
+- RNG: [Article by Nathan Reed](https://www.reedbeta.com/blog/hash-functions-for-gpu-rendering/), [Article by Mark Jarzynski & Marc Oblano](https://jcgt.org/published/0009/03/02/paper.pdf)
