@@ -139,7 +139,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
    By simulating the random walking, mesmerizing leichtenburg-like figures are generated. However: this approach comes with a few major problems, namely that it is horribly inefficient. By generating one particle at a time and giving it tremendous amounts of space to walk, it could take *thousands* of iterations for even one particle to freeze. I found a fantastic resource, linked below, walking through this mountain technique. Their solution was to use a process of upscaling and blurring, but it still took place entirely on the CPU. Perhaps it was fast, but I challenged myself to make it *fast*. I decided to tackle a dilemma they deemed impossible: coding the algorithm on the GPU.
 
-<img width="800" height="800" alt="image" src="https://github.com/user-attachments/assets/52f53cc3-c746-4c94-8764-c3bab76eb9ab" />
+<img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/52f53cc3-c746-4c94-8764-c3bab76eb9ab" /><br>
 *Figure 9: DLA Algorithm*
 
 - **How it's done:**  
@@ -166,10 +166,9 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
   
    *"Compute shaders can be unbelievably fast, but they also have this distressing habit of finding new and creative ways of crashing my computer, so it's a bit of a love-hate relationship." - Sebastian Lague*
   
-<img width="1792" height="1095" alt="Screenshot 2026-01-09 204621" src="https://github.com/user-attachments/assets/385d0cb1-3a38-4bb8-9ffd-2e4e17cb6bd7" />
-<img width="1816" height="1202" alt="Screenshot 2026-01-16 105044" src="https://github.com/user-attachments/assets/14255d45-49c6-4941-abba-86abd97453ff" />
-<img width="1862" height="1044" alt="Screenshot 2026-01-18 144034" src="https://github.com/user-attachments/assets/5c1eeafd-e91f-4e2c-b6b3-f79dcb247927" />
-
+    <img width="448" height="274" alt="Screenshot 2026-01-09 204621" src="https://github.com/user-attachments/assets/385d0cb1-3a38-4bb8-9ffd-2e4e17cb6bd7" /><br>
+    <img width="454" height="300" alt="Screenshot 2026-01-16 105044" src="https://github.com/user-attachments/assets/14255d45-49c6-4941-abba-86abd97453ff" /><br>
+    <img width="466" height="261" alt="Screenshot 2026-01-18 144034" src="https://github.com/user-attachments/assets/5c1eeafd-e91f-4e2c-b6b3-f79dcb247927" /><br>
 *Figures 10, 11 and 12: Bugs!*
 
   Untiy uses C# for CPU scripts and HLSL for GPU scripts. To send data to a Compute Shader, you use what's called a compute buffer. They house arrays of whatever you'd like. For example, I send the particles via a ComputeBuffer. HLSL recieves this, and on the GPU side it can be stored as a few different types of buffers. The common ones are RWStructuredBuffer (read-write) and StructuredBuffer (read only). These buffers are great when you know their exact dimensions and which indices to read.
@@ -434,12 +433,12 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
 
     where s is the particle's step. This returns a value, 0 to 1, that can be multiplied to the particles preexisting magnitude. This data can then be stored in _writeIndexToParticle, at the index corresponding to the particle's vertex, and used to scale the planet's radius.
 
-<img width="2559" height="1054" alt="Screenshot 2026-01-21 205349" src="https://github.com/user-attachments/assets/36459cd3-e497-4731-b68a-a9af1faed41e" />
+    <img width="640" height="264" alt="Screenshot 2026-01-21 205349" src="https://github.com/user-attachments/assets/36459cd3-e497-4731-b68a-a9af1faed41e" /><br>
 *Figure 13: Two Functions Considered for Step Multiplier*
 
     Now, one final step is needed before the heightmap can be applied. If we scaled now, the planet would have *exact* fractals on its surface. To look like a mountain, we need to somehow blur the base of the fractal, but retain it's detailed peaks and ridges.
 
-<img width="2381" height="1374" alt="Screenshot 2026-01-21 210235" src="https://github.com/user-attachments/assets/a4238951-c9fd-4bf7-bdd0-3d8fc4c21980" />
+    <img width="596" height="344" alt="Screenshot 2026-01-21 210235" src="https://github.com/user-attachments/assets/a4238951-c9fd-4bf7-bdd0-3d8fc4c21980" /><br>
 *Figure 14: Unprocessed DLA Output*
 
     The blurring was relatively simple. You can mimic a gaussian blur pretty well by modifying a point based on its neighbors, i.e. taking a weighted average. The more blurs, the more the effect will propogate across the planet. However, the more blurs, the more detail is lost as well. To give a mountain it's deserved majesty, both are needed. This was achieved by making another RWStructuredBuffer that existed for the sole purpose of storing height data relative to vertices. Every time blurDLA would repeat, this new buffer (_heightMap) would add the outputs atop the old data. At the end, the value was divided by the number of blurs. Of course, if more tweaking were desired, the outputs could be weighted with a function. For now, I am quite happy with their output.
@@ -498,10 +497,10 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 
     Now that the algorithm is done, we can mess around with it to our heart's content. Before we delve into the modifications, lets discuss the power of this DLA algorithm. Currently, the algorithm runs on the entire planet mesh, instantly generating mountains with the only variable between them being their height and sprawl. Instead, I could apply it to various submeshes. This will be section 3.2--turning random tectonic collisions into instances of a terrain class. Each will have unique generation parameters for the initial heightmap and broad terrain, and then simulated rainfall and temperature will determine the biome and climate. They will be divided into chunks in a voronoi-like pattern. I have some exciting plans; but for now I'll end this article with snapshots of some of the more creative ways I've hitherto utilized the DLA algorithm.
 
-<img width="1761" height="1045" alt="Screenshot 2026-01-21 205120" src="https://github.com/user-attachments/assets/6861658f-ed39-42bd-9a26-88169ae04133" />
+<img width="440" height="261" alt="Screenshot 2026-01-21 205120" src="https://github.com/user-attachments/assets/6861658f-ed39-42bd-9a26-88169ae04133" /><br>
 *Figure 16: Clamped DLA Mountains Represent Mesa Plateaus*
 
-<img width="1700" height="1125" alt="Screenshot 2026-01-21 190004" src="https://github.com/user-attachments/assets/fb3c2a52-21f3-4381-973f-465b9e24b9db" />
+<img width="425" height="281" alt="Screenshot 2026-01-21 190004" src="https://github.com/user-attachments/assets/fb3c2a52-21f3-4381-973f-465b9e24b9db" /><br>
 *Figure 17: Rift Generated by Subtracting DLA Output*
 
 ## Future Additions
