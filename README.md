@@ -490,12 +490,12 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 }
 ```
 
-    The final step to completing the DLA algorithm was a scaling kernel that would apply the finished heightmap to a vertices array. Then, the planet's mesh is set to that array. Easy!
+  The final step to completing the DLA algorithm was a scaling kernel that would apply the finished heightmap to a vertices array. Then, the planet's mesh is set to that array. Easy!
 
 ![MountainGeneration](https://github.com/user-attachments/assets/b79b9285-1813-49a6-975c-c88b925b7140)
 *Figure 15: Mountain Generation*
 
-    Now that the algorithm is done, we can mess around with it to our heart's content. Before we delve into the modifications, lets discuss the power of this DLA algorithm. Currently, the algorithm runs on the entire planet mesh, instantly generating mountains with the only variable between them being their height and sprawl. Instead, I could apply it to various submeshes. This will be section 3.2--turning random tectonic collisions into instances of a terrain class. Each will have unique generation parameters for the initial heightmap and broad terrain, and then simulated rainfall and temperature will determine the biome and climate. They will be divided into chunks in a voronoi-like pattern. I have some exciting plans; but for now I'll end this article with snapshots of some of the more creative ways I've hitherto utilized the DLA algorithm.
+  Now that the algorithm is done, we can mess around with it to our heart's content. Before we delve into the modifications, lets discuss the power of this DLA algorithm. Currently, the algorithm runs on the entire planet mesh, instantly generating mountains with the only variable between them being their height and sprawl. Instead, I could apply it to various submeshes. This will be section 3.2--turning random tectonic collisions into instances of a terrain class. Each will have unique generation parameters for the initial heightmap and broad terrain, and then simulated rainfall and temperature will determine the biome and climate. They will be divided into chunks in a voronoi-like pattern. I have some exciting plans; but for now I'll end this article with snapshots of some of the more creative ways I've hitherto utilized the DLA algorithm.
 
 <img width="440" height="261" alt="Screenshot 2026-01-21 205120" src="https://github.com/user-attachments/assets/6861658f-ed39-42bd-9a26-88169ae04133" /><br>
 *Figure 16: Clamped DLA Mountains Represent Mesa Plateaus*
