@@ -2,7 +2,7 @@
 Side project inspired by the video game Outer Wilds.
 
 <img width="1741" height="1011" alt="Screenshot 2026-01-21 204851" src="https://github.com/user-attachments/assets/067b643e-aefa-4520-a219-cc78d2869428" />
-  *Mountain Generated due to Convergent Tectonic Boundary*
+    *Mountain Generated due to Convergent Tectonic Boundary*
 
 ## Overview
 - A project created to simulate planet generation. Currently a WIP with the hopes of being updated every two or so weeks.
@@ -65,8 +65,8 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     
     $\ r = \frac{4 \cdot \text{Radius}^2}{\text{numTectonics} \cdot d} $
     
-<img width="595" height="323" alt="Screenshot 2025-12-23 112142" src="https://github.com/user-attachments/assets/a76dda5f-3ae5-4707-b884-6368e13e1b8c" /><br>
-  *Figure 3: Tectonic Radius*
+  <img width="595" height="323" alt="Screenshot 2025-12-23 112142" src="https://github.com/user-attachments/assets/a76dda5f-3ae5-4707-b884-6368e13e1b8c" /><br>
+    *Figure 3: Tectonic Radius*
 
     Let's talk about r. I needed each tectonic plate to cover roughly $\frac{1}{desiredTectonics}$ surface area of the initial sphere. So, I had a question: if a sphere, of radius _R_, has an idential sphere generated on it's edge, how much of the first sphere's surface area does that second sphere encapsulate? First, we find the points of intersection when represented as a circle. Since the spheres have identical radii, these points are a distance R. Similarly, from center to center is also R. This creates two equilateral triangles. Thus, our angle, $\theta$, is 60 degrees.
 
