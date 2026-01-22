@@ -2,7 +2,7 @@
 Side project inspired by the video game Outer Wilds.
 
 <img width="1741" height="1011" alt="Screenshot 2026-01-21 204851" src="https://github.com/user-attachments/assets/067b643e-aefa-4520-a219-cc78d2869428" />
-*Mountain Generated due to Convergent Tectonic Boundary*
+  *Mountain Generated due to Convergent Tectonic Boundary*
 
 ## Overview
 - A project created to simulate planet generation. Currently a WIP with the hopes of being updated every two or so weeks.
@@ -25,7 +25,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
   This was a lot of index math. I have pages and pages of subdivided triangles with illegibly scribbled numbers that somehow made sense as I made it. If I redid it, I probably would've spent more time making an ironclad winding pattern so the vertices and faces are generated neatly, but as of now they're somewhat messy. As a result, I had to make redundancy-checker funcitons that are not exactly optimal. Additionally, there is no tessellation and no plans for it; but if I were to improve the sphere, that would be on the list.
 
 <img width="430" height="260" alt="Screenshot 2025-12-23 111323" src="https://github.com/user-attachments/assets/948ef4d8-d4c1-4f6c-bb24-118f8b0642ed" /><br>
-*Figure 1: Subdivided Icosohedron*
+  *Figure 1: Subdivided Icosohedron*
 
   - **How it's done:**  
     When I first wrote the subdividing methods, it was mapped to a single triangle, then to an octohedron, _then_ to an icosohedron. I started with a list of predetermined vectors and their faces corresponding to a base shape. To subdivide its triangles, my method of choice was lerp abuse. I wrote a nested loop in code, in which the first loop determines the vertical layer, interpolating from bottom to top, and the inner loop interpolates from left to right. When looking at a subdivided triangle, the amount of vertices in each layer decreases by 1. Together, I used these properties to create vertices and their faces. After this process was finished, I added a simple method that would loop through each point and normalize their radius to the center. To do this, the current distance of a vertex from the center was divided by the goal radius, then that scalar ratio was multiplied to the vector position.
@@ -49,7 +49,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     where n is the number of subdivisions and both approximations are accurate to $\log_{10}(n)$ digits.
 
 <img width="502" height="282" alt="Screenshot 2025-12-23 111339" src="https://github.com/user-attachments/assets/1410552d-5ebd-4ad2-8671-26d51ba5620b" /><br>
-*Figure 2: Subdivided Icosohedron with Normalized Radius & Vertex Visuals*
+  *Figure 2: Subdivided Icosohedron with Normalized Radius & Vertex Visuals*
 
 - **Phase 2: Tectonics**  
   The second phase was making tectonics for the planet. I wanted this so I could make semi-realistic land formations based on the collisions of tectonic plates. These could have been created through a number of strategies, but I chose one I hadn't seen before. To start, a common method for generating tectonic plates is choosing a random vertex on the surface of the sphere, then checking a radius around said point. If other vertices don't belong to a plate, they now belong to the same plate that inital vertex does. Now, this is quite basic and only forms circles; most people move on to more advanced fractal algorithms to achieve the blobby shape tectonics on Earth make. I decided that was a convoluted solution. Instead, I changed the radius from a constant into an equation. Using trig functions, I made the outer bounds have that characteristic blobby, deformed shape; then, atop that, I added randomized constants that determine the wavelength of the trig functions. This resulted in shapes I am quite proud of, especially as it's a relatively simply solution that I hadn't seen before.
@@ -66,7 +66,7 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     $\ r = \frac{4 \cdot \text{Radius}^2}{\text{numTectonics} \cdot d} $
     
 <img width="595" height="323" alt="Screenshot 2025-12-23 112142" src="https://github.com/user-attachments/assets/a76dda5f-3ae5-4707-b884-6368e13e1b8c" /><br>
-*Figure 3: Tectonic Radius*
+  *Figure 3: Tectonic Radius*
 
     Let's talk about r. I needed each tectonic plate to cover roughly $\frac{1}{desiredTectonics}$ surface area of the initial sphere. So, I had a question: if a sphere, of radius _R_, has an idential sphere generated on it's edge, how much of the first sphere's surface area does that second sphere encapsulate? First, we find the points of intersection when represented as a circle. Since the spheres have identical radii, these points are a distance R. Similarly, from center to center is also R. This creates two equilateral triangles. Thus, our angle, $\theta$, is 60 degrees.
 
