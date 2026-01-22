@@ -1,7 +1,7 @@
 # Procedural-Planet-Generator
 Side project inspired by the video game Outer Wilds.
 
-    <img width="1741" height="1011" alt="Screenshot 2026-01-21 204851" src="https://github.com/user-attachments/assets/067b643e-aefa-4520-a219-cc78d2869428" /><br>
+    <img width="1741" height="1011" alt="Screenshot 2026-01-21 204851" src="https://github.com/user-attachments/assets/067b643e-aefa-4520-a219-cc78d2869428" />
 *Mountain Generated due to Convergent Tectonic Boundary*
 
 ## Overview
