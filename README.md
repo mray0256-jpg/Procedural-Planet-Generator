@@ -209,10 +209,10 @@ Although as of now, the only "gameplay" is changing random stats, a goal in the 
     ```
 
     ```hlsl
-    #pragma kernel shallowCopy
+    #pragma kernel deepCopy
 
     [numthreads(64, 1, 1)]
-    void shallowCopy(uint3 id : SV_DispatchThreadID)
+    void deepCopy(uint3 id : SV_DispatchThreadID)
     {
         if (id.x >= (uint) numVertices) return;
         particle p = _writeIndexToParticle[id.x];
