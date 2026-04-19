@@ -1,0 +1,214 @@
+//Passing variables
+int currentStep;
+float timer; //time based rng
+int numVertices;
+int numBlurs;
+float weight;
+float mountainRatio;
+struct particle
+{
+    int idx; //coincident vertex index
+    int isMobile; //to freeze a particle
+    int frozenIndex; //points to parent
+    int step;
+    float magnitude; //used for stickiness & max height
+    float particleRNG;
+};
+
+RWStructuredBuffer<float3> _vertexData;
+RWStructuredBuffer<uint> _Args;
+RWStructuredBuffer<float> _heightMap;
+RWStructuredBuffer<particle> _writeIndexToParticle; //acts as a dictionary; adds key
+RWStructuredBuffer<particle> _readIndexToParticle;
+RWStructuredBuffer<int> finishedElevating;
+//read only
+StructuredBuffer<int> _neighbors; //check collisions, move particles
+//append buffers
+ConsumeStructuredBuffer<particle> _aliveParticles;//consume only (read)
+AppendStructuredBuffer<particle> _nextFrameParticles;//append only (write)
+AppendStructuredBuffer<particle> _deadParticles;//append only (write)
+
+ // PCG 32-bit hash (Reed / Jarzynski & Olano)
+uint pcg_hash(uint v)
+{
+    uint state = v * 747796405u + 2891336453u;
+    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+ 
+float rng(uint input, uint call, float RN)
+{
+    uint t = (uint) (timer * 12345.678f);
+    uint rn = (uint) (saturate(RN) * 16777215.0f);
+ 
+    uint seed = 0u;
+    seed ^= input;
+    seed ^= call * 0x9E3779B9u;
+    seed ^= (uint) currentStep * 0x85EBCA6Bu;
+    seed ^= t * 0xC2B2AE35u;
+    seed ^= rn * 0x27D4EB2Du;
+ 
+     // Hash twice for extra diffusion
+    uint h = pcg_hash(seed);
+    h = pcg_hash(h ^ (input + 0xB5297A4Du));
+ 
+     //0-1
+    return (float) h * (1.0f / 4294967296.0f);
+}
+
+#pragma kernel performDLA
+
+[numthreads(64,1,1)]
+void performDLA(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Args[0])
+        return;
+    particle p = _aliveParticles.Consume();
+    if (p.isMobile != 1)
+    {
+        _deadParticles.Append(p);
+        return; //frozen particles shouldn't move
+    }
+    
+    int delidx = floor(rng(p.idx, 2, p.particleRNG) * 6);
+    int nextIdx = _neighbors[p.idx * 6 + delidx]; //moves particle index to one of its neighbors
+    if (nextIdx != -1)
+    { 
+        delidx = p.idx;
+        p.idx = nextIdx;
+    }
+    for (int i = 0; i < 6; i++)
+    {
+        int neighborIdx = _neighbors[p.idx * 6 + i];
+        if (neighborIdx == -1)
+            continue;
+        float height = _readIndexToParticle[neighborIdx].magnitude;
+        if (height > 0)//heights has a magnitude! Collided!
+        {
+            p.frozenIndex = neighborIdx;
+            p.magnitude = height;
+            break;
+        }
+    }
+    
+    p.isMobile = (int) (p.magnitude < rng(p.idx, 3, p.particleRNG)); //higher magnitude yields higher chance of freezing
+    if (p.isMobile == 1 && p.magnitude != 0)//i.e., bounced
+    {
+        p.idx = delidx; //moves the particle to its previous position
+        p.magnitude = 0;
+        p.frozenIndex = -1;
+        _nextFrameParticles.Append(p);
+        return;
+    }
+    else if (p.magnitude == 0 && p.isMobile == 1)//i.e., still moving as normal
+    {
+        _nextFrameParticles.Append(p);
+        return;
+    }
+    else if (p.isMobile != 1 && p.magnitude == 0)
+    {
+       //particle should never get here
+       //give it an invalid magnitude, will cause graphical errors and alert user of error
+        p.magnitude = -1;
+        _deadParticles.Append(p);
+    }
+    else //froze!
+    {
+        _deadParticles.Append(p);
+        _writeIndexToParticle[p.idx] = p;
+        return;
+    }
+
+   //a particle should never get here
+   //give it an invalid magnitude, will cause graphical errors and alert user of error
+    p.magnitude = -1;
+    _deadParticles.Append(p);
+    return;
+}
+
+#pragma kernel propogateSteps
+
+[numthreads(64, 1, 1)]
+void propogateSteps(uint3 id : SV_DispatchThreadID)
+{    
+    if (id.x >= _Args[0])
+        return;
+    particle q = _aliveParticles.Consume();
+    particle p = _readIndexToParticle[q.idx];
+    
+    int parent = p.frozenIndex;
+    if (parent != -1 && _readIndexToParticle[parent].step < p.step + 1)
+    {
+        InterlockedMax(_writeIndexToParticle[parent].step, p.step + 1);
+        finishedElevating[0] = 0;
+    }
+    _deadParticles.Append(p);
+}
+
+#pragma kernel elevate
+
+[numthreads(64, 1, 1)]
+void elevate(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Args[0]) return;
+    particle q = _aliveParticles.Consume();
+    particle p = _readIndexToParticle[q.idx];
+    _writeIndexToParticle[p.idx].magnitude = p.magnitude * (1.0f - 1.0f / (1.0f + p.step)); //apply height dampening function
+}
+
+#pragma kernel blurDLA
+
+[numthreads(64, 1, 1)]
+void blurDLA(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) numVertices) return;
+    float height = _readIndexToParticle[id.x].magnitude;
+    float numHeights = 1;
+    float totalHeight = height;
+    for (int i = 0; i < 6; i++)
+    {
+        int index = id.x * 6 + i;
+        if (_neighbors[index] == -1) continue;
+        
+        totalHeight += _readIndexToParticle[_neighbors[index]].magnitude * weight;
+        numHeights += weight;//more accurate than += 1
+    }
+    height = totalHeight / numHeights;
+    
+    _writeIndexToParticle[id.x].magnitude = height;
+}
+
+#pragma kernel scaleRadii
+
+[numthreads(64, 1, 1)]
+void scaleRadii(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) numVertices) return;
+    float scalar = _readIndexToParticle[id.x].magnitude;
+
+    _heightMap[id.x] += scalar;//could apply a function here...
+    
+    if (currentStep == numBlurs)
+    {
+        float3 vertex = _vertexData[id.x];
+        scalar = (float) _heightMap[id.x] / (numBlurs == 0 ? 1 : numBlurs);
+        
+        //scalar = floor(scalar * 8) / 8; //plateau effect
+        //if (scalar > 0.4) scalar = 0.4;
+        
+        vertex *= 1.0f + scalar * mountainRatio;
+        _vertexData[id.x] = vertex;
+    }
+}
+
+#pragma kernel deepCopy
+
+[numthreads(64, 1, 1)]
+void deepCopy(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint) numVertices) return;
+    particle p = _writeIndexToParticle[id.x];
+    _readIndexToParticle[id.x] = p;
+}
+
+

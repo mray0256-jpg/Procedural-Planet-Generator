@@ -1,0 +1,339 @@
+// Each #kernel tells which function to compile; you can have many kernels
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWStructuredBuffer<float3> _vertices;
+
+float3 mod289(float3 x)
+{
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+float4 mod289(float4 x)
+{
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+float4 permute(float4 x)
+{
+    return mod289(((x * 34.0) + 1.0) * x);
+}
+float4 taylorInvSqrt(float4 r)
+{
+    return 1.79284291400159 - 0.85373472095314 * r;
+}
+float snoise(float3 v)
+{
+    const float2 C = float2(1.0 / 6.0, 1.0 / 3.0);
+    const float4 D = float4(0.0, 0.5, 1.0, 2.0);
+
+    // First corner
+    float3 i = floor(v + dot(v, C.yyy));
+    float3 x0 = v - i + dot(i, C.xxx);
+
+    // Other corners
+    float3 g = step(x0.yzx, x0.xyz);
+    float3 l = 1.0 - g;
+    float3 i1 = min(g.xyz, l.zxy);
+    float3 i2 = max(g.xyz, l.zxy);
+
+    float3 x1 = x0 - i1 + C.xxx;
+    float3 x2 = x0 - i2 + C.yyy; // 2.0 * C.xxx = 1/3 = C.y
+    float3 x3 = x0 - D.yyy; // 1.0 - 3.0 * 1/6 = 0.5
+
+    // Permutations
+    i = mod289(i);
+    float4 p = permute(permute(permute(
+             i.z + float4(0.0, i1.z, i2.z, 1.0))
+           + i.y + float4(0.0, i1.y, i2.y, 1.0))
+           + i.x + float4(0.0, i1.x, i2.x, 1.0));
+
+    // Gradients: 7x7 grid over the surface of a tetrahedron
+    float n_ = 0.142857142857; // 1.0/7.0
+    float4 ns = float4(n_ * D.wyz - D.xzx, 0);
+    
+    // Manual fix for the ns swizzling
+    float4 j = p - 49.0 * floor(p * (1.0 / 49.0));
+
+    float4 x_ = floor(j * (1.0 / 7.0));
+    float4 y_ = floor(j - 7.0 * x_);
+
+    float4 x = x_ * n_ + 0.5 * n_ - 0.5; // Centering the grid
+    float4 y = y_ * n_ + 0.5 * n_ - 0.5;
+    float4 h = 1.0 - abs(x) - abs(y);
+
+    float4 b0 = float4(x.xy, y.xy);
+    float4 b1 = float4(x.zw, y.zw);
+
+    float4 s0 = floor(b0) * 2.0 + 1.0;
+    float4 s1 = floor(b1) * 2.0 + 1.0;
+    float4 sh = -step(h, 0.0);
+
+    float4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+    float4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+
+    float3 p0 = float3(a0.xy, h.x);
+    float3 p1 = float3(a0.zw, h.y);
+    float3 p2 = float3(a1.xy, h.z);
+    float3 p3 = float3(a1.zw, h.w);
+
+    // Normalise gradients
+    float4 norm = taylorInvSqrt(float4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+
+    // Mix contributions from the four corners
+    float4 m = max(0.6 - float4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot(m * m, float4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)));
+}
+
+float fractal_noise(float3 p)
+{
+    float total = 0.0;
+    float amplitude = 0.3; // How much the current octave contributes
+    float frequency = 0.15; // How "zoomed in" the current octave is
+    float persistence = 0.4; // How much amplitude decreases per octave
+    float lacunarity = 2.2; // How much frequency increases per octave
+    int octaves = 6; // Total number of layers
+
+    for (int i = 0; i < octaves; i++)
+    {
+        // Multiply by frequency to increase detail, multiply by amplitude to scale height
+        total += snoise(p * frequency) * amplitude;
+        
+        amplitude *= persistence;
+        frequency *= lacunarity;
+    }
+    return total;
+}
+
+
+#pragma kernel simplexNoise
+
+[numthreads(64, 1, 1)]
+void simplexNoise(uint3 id : SV_DispatchThreadID)
+{
+    float3 vertex = _vertices[id.x];
+    _vertices[id.x] *= 1.0f + 0.2 * fractal_noise(vertex);
+}
+
+
+//WORLEY NOISE
+RWTexture3D<float4> _Noise3D;
+int _TargetChannel;
+uint _WorleyTextureSize; //Texture resolution is _WorleyTextureSize^3
+int _WorleyBaseFreq;//Total grid cells
+int _WorleyNumOctaves; //Number of fBm layers
+//persistance? //weight decrease per layer (typically 0.5)
+//lacunarity? //power by which frequency is scaled between octaves (typically 2)
+
+// Hash by David_Hoskins
+#define UI0 1597334673u
+#define UI1 3812015801u
+#define UI2 uint2(UI0, UI1)
+#define UI3 uint3(UI0, UI1, 2798796415u)
+#define UIF (1.0 / float(0xffffffffU))
+
+float3 hash33(float3 p)
+{
+    uint3 q = uint3((int3) p) * UI3;
+    q = (q.x ^ q.y ^ q.z) * UI3;
+    
+    return -1.0 + 2.0 * float3(q) * UIF;
+}
+
+float3 mod(float3 x, float y)
+{
+    return x - y * floor(x / y);
+}
+
+float generateWorley(float3 pos, int freq)
+{
+    int3 cell = floor(pos);
+    float3 pointInCell = frac(pos);
+    float minSqrDist = 1;
+    
+    //loops through all 27 neighboring cells
+    for (int x = -1; x < 2; x++){
+        for (int y = -1; y < 2; y++){
+            for (int z = -1; z < 2; z++){
+                int3 neighborCell = cell + int3(x, y, z); //offset; one of 27 neighboring cells surrounding the point
+                float3 pnt = hash33(mod(neighborCell, freq)) * .5 + .5;
+                pnt += int3(x, y, z); //pnt represents nearest "dot"
+                //find distance between pointInCell & pnt
+                float3 diff = pointInCell - pnt;
+                minSqrDist = min(minSqrDist, dot(diff, diff));
+            }
+        }
+    }
+    
+    return saturate(1 - sqrt(minSqrDist)); //****** USE WITHOUT SQRT *******
+}
+
+#pragma kernel worleyNoise3D
+
+[numthreads(8, 8, 8)]
+void worleyNoise3D(uint3 id : SV_DispatchThreadID)
+{
+    //Bounds check
+    if (id.x >= _WorleyTextureSize || id.y >= _WorleyTextureSize || id.z >= _WorleyTextureSize)
+        return;
+    
+    float4 current = _Noise3D[id];
+    float3 pos = (float3) id / (float) _WorleyTextureSize;
+    
+    float _WorleyPersistance = 0.5;
+    float _WorleyLacunarity = 2;
+
+    float localFreq = _WorleyBaseFreq;
+    float amp = 1;
+    float noise = 0;
+    float totalAmp = 0;
+    for (int i = 0; i < _WorleyNumOctaves; i++)
+    {
+        noise += amp * generateWorley(pos * localFreq, localFreq);
+        totalAmp += amp;
+        localFreq *= _WorleyLacunarity;
+        amp *= _WorleyPersistance;
+    }
+    noise /= totalAmp;
+    float4 result = _Noise3D[id];
+    if (_TargetChannel == 0) result.r = noise;
+    else if (_TargetChannel == 1) result.g = noise;
+    else if (_TargetChannel == 2) result.b = noise;
+    else result.a = noise;
+
+    _Noise3D[id] = result;
+}
+
+//PERLIN NOISE
+uint _PerlinTextureSize; //Texture resolution is _PerlinTextureSize^3
+int _PerlinBaseFreq; //Total grid cells
+int _PerlinNumOctaves; //Number of fBm layers
+//persistance? //weight decrease per layer (typically 0.5)
+//lacunarity? //power by which frequency is scaled between octaves (typically 2)
+
+float determines(float u)
+{
+    return 6 * (u * u * u * u * u) - 15 * (u * u * u * u) + 10 * (u * u * u);
+}
+
+float3 determinet(float3 uvw)
+{
+    return float3(determines(uvw.x), determines(uvw.y), determines(uvw.z));
+}
+
+float remap(float value, float minOld, float maxOld, float minNew, float maxNew)
+{
+    float ratio = (maxNew - minNew) / (maxOld - minOld);
+    return minNew + (value - minOld) * ratio;
+}
+
+float generatePerlin(float3 pos, float freq)//function generates one octave of perlin noise
+{
+    float3 cell = floor(pos);
+    float3 pointInCell = frac(pos);
+    float perlin = 0;
+    float3 t = determinet(pointInCell);//interpolant
+    float dots[8];//dot products between pointInCell and gradients
+    for (int z = 0; z < 2; z++){
+        for (int y = 0; y < 2; y++){
+            for (int x = 0; x < 2; x++){
+                float3 neighborCell = cell + int3(x, y, z); //offset; one of 8 corners of the cube surrounding the point
+                
+                float3 gradient = hash33(mod(neighborCell, freq));
+                float dotProd = dot(gradient, pointInCell - float3(x, y, z));
+                dots[x + y * 2 + z * 4] = dotProd;
+            }
+        }
+    }
+    
+    //lerps between x corners, then y corners, then finally z
+    float lerpX00 = lerp(dots[0], dots[1], t.x);
+    float lerpX10 = lerp(dots[2], dots[3], t.x);
+    float lerpX01 = lerp(dots[4], dots[5], t.x);
+    float lerpX11 = lerp(dots[6], dots[7], t.x);
+
+    float lerpY0 = lerp(lerpX00, lerpX10, t.y);
+    float lerpY1 = lerp(lerpX01, lerpX11, t.y);
+
+    perlin = lerp(lerpY0, lerpY1, t.z);
+    return perlin;
+}
+
+float gradientNoise(float3 x, float freq)
+{
+    // grid
+    //return hash33(x).x;
+    float3 p = floor(x);
+    float3 w = frac(x);
+    
+    // quintic interpolant
+    float3 u = w * w * w * (w * (w * 6. - 15.) + 10.);
+
+    
+    // gradients
+    float3 ga = hash33(mod(p + float3(0., 0., 0.), freq));
+    float3 gb = hash33(mod(p + float3(1., 0., 0.), freq));
+    float3 gc = hash33(mod(p + float3(0., 1., 0.), freq));
+    float3 gd = hash33(mod(p + float3(1., 1., 0.), freq));
+    float3 ge = hash33(mod(p + float3(0., 0., 1.), freq));
+    float3 gf = hash33(mod(p + float3(1., 0., 1.), freq));
+    float3 gg = hash33(mod(p + float3(0., 1., 1.), freq));
+    float3 gh = hash33(mod(p + float3(1., 1., 1.), freq));
+    
+    // projections
+    float va = dot(ga, w - float3(0., 0., 0.));
+    float vb = dot(gb, w - float3(1., 0., 0.));
+    float vc = dot(gc, w - float3(0., 1., 0.));
+    float vd = dot(gd, w - float3(1., 1., 0.));
+    float ve = dot(ge, w - float3(0., 0., 1.));
+    float vf = dot(gf, w - float3(1., 0., 1.));
+    float vg = dot(gg, w - float3(0., 1., 1.));
+    float vh = dot(gh, w - float3(1., 1., 1.));
+	
+    // interpolation
+    return va +
+           u.x * (vb - va) +
+           u.y * (vc - va) +
+           u.z * (ve - va) +
+           u.x * u.y * (va - vb - vc + vd) +
+           u.y * u.z * (va - vc - ve + vg) +
+           u.z * u.x * (va - vb - ve + vf) +
+           u.x * u.y * u.z * (-va + vb + vc - vd + ve - vf - vg + vh);
+}
+
+#pragma kernel perlinNoise3D
+
+[numthreads(8, 8, 8)]
+void perlinNoise3D(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _PerlinTextureSize || id.y >= _PerlinTextureSize || id.z >= _PerlinTextureSize)
+        return;
+    
+    float4 current = _Noise3D[id];
+    float3 pos = ((float3) id + 0.5) / (float) _PerlinTextureSize;
+    
+    //these variables could be added to the buffer for more control
+    float _PerlinPersistance = exp2(-0.85);
+    float _Cloudiness = 0.5;
+    float _PerlinLacunarity = 2;
+    
+    float localFreq = _PerlinBaseFreq;
+    float amp = 1;
+    float noise = 0;
+    float totalAmp = 0;
+    for (int i = 0; i < _PerlinNumOctaves; i++)
+    {
+        noise += amp * gradientNoise(pos * localFreq, localFreq);
+        localFreq *= _PerlinLacunarity;
+        amp *= _PerlinPersistance;
+    }
+    noise = noise * 0.5 + 0.5;
+    noise = abs((noise * 2) - 1);
+    float worley = current.g;
+    float perlinWorley = remap(noise, 0, 1, worley, 1);
+    //perlinWorley = worley;
+    _Noise3D[id] = float4(perlinWorley, perlinWorley, perlinWorley, 1); //current.g, current.b, current.a
+}
