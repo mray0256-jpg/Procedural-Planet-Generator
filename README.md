@@ -506,7 +506,7 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 ![MountainGeneration](https://github.com/user-attachments/assets/b79b9285-1813-49a6-975c-c88b925b7140)
 *Figure 15: Mountain Generation*
 
-  Now that the algorithm is done, we can mess around with it to our heart's content. Before we delve into the modifications, lets discuss the power of this DLA algorithm. Currently, the algorithm runs on the entire planet mesh, instantly generating mountains with the only variable between them being their height and sprawl. Instead, I could apply it to various submeshes. This will be section 3.2--turning random tectonic collisions into instances of a terrain class. Each will have unique generation parameters for the initial heightmap and broad terrain, and then simulated rainfall and temperature will determine the biome and climate. They will be divided into chunks in a voronoi-like pattern. I have some exciting plans; but for now I'll end this article with snapshots of some of the more creative ways I've hitherto utilized the DLA algorithm.
+  Now that the algorithm is done, we can mess around with it to our heart's content. Before we delve into the modifications, lets discuss the power of this DLA algorithm. Currently, the algorithm runs on the entire planet mesh, instantly generating mountains with the only variable between them being their height and sprawl. Instead, I could apply it to various submeshes. This will be section 3.2--turning random tectonic collisions into instances of a terrain class. Each will have unique generation parameters for the initial heightmap and broad terrain, and then simulated rainfall and temperature will determine the biome and climate. They will be divided into chunks in a voronoi-like pattern.
 
 <img width="435" height="255" alt="Screenshot 2026-01-21 204851" src="https://github.com/user-attachments/assets/067b643e-aefa-4520-a219-cc78d2869428" /><br>
 *Mountain Generated due to Convergent Tectonic Boundary*
@@ -519,8 +519,80 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 
 
 - **Phase 4: Atmosphere**
-- Somewhere alo
+- The last section I wrote, the DLA algorithm, I finished about three months ago. During those months, I took a break to work on a game-jam and do some less math-heavy projects. It wasn't long, however, before I was ready to come back. Originally, I had grand plans to begin my return by massively overhauling the architecure of this project. As I'm sure is no surprise to anyone who's coded before, my ambitions morphed into a vision far less future-proof. Instead of fixing older issues, I began to create new ones.
 
+  Thus began the month-long journey of learning physically-based shaders. Ray-marching, texture tradeoffs, calculus, pedantically named functions, volumetrics, noise, and heaps of research papers. Boy, did I love it.
+
+  The atmosphere shader was inspired by Sean O'Neil's paper in GPU Gems Vol. 2. The process appeared remarkably simple. First, the equations. Note that the clouds use very similar equations, so I will not rewrite them.
+
+  Henyey-Greenstein: F(\theta, g) = \frac{1}{4\pi}\cdot \frac{1-g^2}{(1 + g^2-2g \cdot cos(\theta))^\frac{3}{2}}
+
+  The Henyey-Greenstein equation represents scattering. Imagine looking in the direction of the sun, but you see a cloud along the way. The cloud will have a silvery outline; that effect is calculated by this function. Here, $theta $ represents the view direction (in code, we pass this in as cosTheta because a dot product has a magnitude |a||b|cos(theta). Since a and b, viewDir and sunDir, are unit vectors we can avoid an extra calculation), and g represents the direction of scattering. Clouds, being white or grey, scatter more colors forward with a g value of ~0.8 (called Mie Scattering). The atmosphere scatters light in all directions equally, with a g value of 0 (called Rayleigh Scattering).
+
+  Density: $den=e^{\frac{-h}{H_0}}
+
+  This equation answers a simple question: how dense is the atmosphere at a given height above the planet? This translates to how much light and color will be let through given points in the atmosphere.
+
+  Optical Depth: $OD=4\pi\cdot K(\lambda)\cdot \int_{P_b}^{P_a}den ds$
+
+  Now we've reached the ray marching functions. In math, an integral represents an infinite sum. In code, we unfortunately cannot do that. Graphics programming is all about the art of approximation. The typical response to an integral, if the math cannot be hand-calculated, is to create a for-loop and turn the integral into a finite summation. A compromise is then presented to the programmer: increase the iterations, boosting visual fidelity but compromising on speed, or decrease the iterations and accept a lesser result.
+
+  The optical depth represents an *infinite sum* of densities along some ray. Imagine we have a point on the atmosphere. The optical depth might ask: how much light from the sun *reaches* this point? And furthermore, it could be used to ask how much of *that* light reaches the viewer? The way light is treated is akin to a probability: what are the chances a ray of light, scattered through aerosols or clouds or o2 particles, might hit the viewers eyes? 
+
+  In-Scattering: $InScattering = I_s(\lambda)\cdot K(\lambda)\cdot F(\theta,g)\cdot \int_{P_b}^{P_a}(den \cdot e^{(-OD_{Sun} \cdot OD_{ViewRay})})ds$
+
+Finally, the in-scattering equation puts it all together. It is essentially a scaled summation of optical depths. If each optical depth calculates one point, the in scattering equations attempts to calculate *all* points along a given ray. In code, we have a loop that runs numScatters time; each time it calls the OpticalDepth function which runs numOpticals times. If we choose large numbers, the scene might look nice, but it will get out of hand very quickly. One of the challenges of this atmosphere shader is the sheer quantity of parameters. There are *34* of them! The goal is to balance visuals with computation. Tweaking took a good long time, but it was worth it.
+
+Now that we have our equations, we should port them to code. Immediately, we run into a problem. There is nothing in the scene to actually raymarch through. To keep it procedural, we create a fullscreen shader and apply it to a sphere that exists purely mathematically. This shader runs in whats called a fragment shader. These take the triangles on our screen, break them up into pixels (fragments), and render them. We can use some fancy linear algebra to determine our world space camera position and then calculate the ray direction of every pixel. We can also access the depth buffer and linearize it so we don't accidentally render the clouds behind the planet. This is the data the computer gives us, but it's not yet what we need. For the atmosphere and clouds, we need two more things from these rays: A), when do I hit the atmosphere? And B), how far through the atmosphere do I traverse? These are necessary to compute the correct densities in the correct locations. Without it, the computer wouldn't know where to render anything.
+
+//fragment shader code snippet?
+
+  To calculate these, we use what's called a ray-sphere intersection. They are quite fun to calculate on one's own. It's the kind of challenge that is simple enough not to be daunting but also not so easy it's boring. If we had a float3 representing our center, and a ray, we could use trigonometry to find the distance between the center and the nearest point on the ray. 
+
+  //raysphere pictures
+  
+  First, we use our rayOrigin to find a vector to the center of the sphere. Then, we take a dot product between sphereVec and rayVec. This tells us exactly how long the rayVec must be for the most promixity to the sphere center. We will call this closest point p. Before continuing, we always want to work in distances squared. Sqrt functions are expensive. We actually determine whether p is in the sphere through the quadratic formula's discriminant: b^2 - 4ac. If the discriminant is > 0, e.g. has two real roots, we know the ray passes through two points on the sphere. 
+  
+  We use point p's distance from the center of the circle to create a new right triangle. We know the length between p and the center, and we know the hypotenuse must be the radius of the sphere, because we are trying to find the viewRay's entry point into the sphere. Now all we do is find the distance from p to the edge of the sphere. Now we can calculate the distance to the front and back edge of the sphere, because they will always have the same distance from point p. Using this, we return our distanceTo and distanceThrough values, completing the function.
+
+  Once this has all been placed into code, we have a basic atmosphere with tunable colors!
+
+  //pictures
+
+  As for improvements, there is always optimization. The optical depth can be a cheap 2D texture lookup instead of an expensive exp() function. For funciton, the atmosphere currently doesn't interact with the ground or the clouds, which it should.
+
+  //more pictures
+
+Now that the atmosphere is finished, we can begin working on our clouds. They use a very similar process; you need optical depth, in-scattering, raymarching, and a raysphere intersection (the raysphere intersection can actually be optimized out by sharing the atmosphere's and then tweaking the values). However, they have one major difference: the density of clouds is *not* a nice and consistent exp() function. For this, we bring in noise and remap functions.
+
+//Perlin noise
+
+The first noise algorithm we make is called Perlin Noise. It is unbelievably useful. When you watch a movie or play a game and see some fancy visual effects, 80% of the time it's a variation of perlin noise. Fog? Clouds? Water? Fire? Dissolving? In the 90's, Ken Perlin sought to make a form of noise that was organic in appearance, but generated entirely procedurally with just math. For 3D noise, the algorithm takes a grid of cubes.
+
+//Image of just corners
+
+The position of each corner is put into a hash function, and the value is used to create a random unit vector. Every corner is assigned one. When the actual texture itself is generated, there might be 10 or 50 texels (texture pixels) between each corner of this grid. At each texel, we find the vector between the texel location and the four corners. Then, we compare that vector to the random unity vector via a dot product.
+
+//image of 2D perlin noise generation
+
+This generates a nice gradient with large blobs that are useful for organic shapes and patterns. The other noise used for these clouds was worley noise. It uses a similar process: start with a 3D grid, and in each cell place a random point. It could be located anywhere within the cell's bounds. When the texture is generated, each texel corresponds to the distance of the nearest random point. Worley noise creates blobby, cell-like shapes. They can be used for caustics, terrain generation, or, luckily, clouds. 
+
+//worley
+
+Noise can be layered, too. Here, I've stacked 7 layers of Worley noise on top of each other, increasing the frequency but decreasing the amplitude of each. This technique is known as fractal brownian motion.
+
+//worley FBM
+
+To generate the clouds, we use a strange bastard of these two noises: perlin-worley. A remap function can be used, which takes a value of a set (min,max) and uses that ratio to place it in a new (min,max). This function is handy because it will leave high-density regions largely unnaffected, but mid or low density regions can have substantial effects. This means our new function keeps the organic shapes of perlin, but inscribes the billowiness of worley onto the high-density regions of it.
+
+//perlin-worley
+
+This noise, along with some other effects, were stacked together as a replacement for the density function shown above. The result has the unmistakable appearance of a cloud. Of course, there's plenty of room for improvement. The clouds only have a stratus layer; it would be beneficial to also have a cirrus band (long wispy clouds very, very high up). Additionally, the erosion of the edges of the clouds is subpar at the moment. It could be improved by carving wispy shapes at the base of a cloud and billowy shapes at the top of a cloud. 
+
+//cloud pics
+
+Now that the atmosphere is largely complete, we can put everything together!
+  
 <img width="1191" height="990" alt="AtmosphereDemonstration" src="https://github.com/user-attachments/assets/c4916a23-b126-43c6-9f88-a60dc51453d3" /><br>
 *Figure XX: Clouds, atmosphere, and planet running at 270 FPS on Unity Editor*
 
