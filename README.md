@@ -1,7 +1,8 @@
 # Procedural-Planet-Generator
 Side project inspired by the video game Outer Wilds.
 
-
+<img width="1191" height="990" alt="AtmosphereDemonstration" src="https://github.com/user-attachments/assets/c4916a23-b126-43c6-9f88-a60dc51453d3" />
+*Planet complete with physically-based atmosphere and clouds*
 
 ## Overview
 - A project created to simulate planet generation. Currently a WIP with the hopes of being updated every two or so weeks.
@@ -12,10 +13,21 @@ Side project inspired by the video game Outer Wilds.
 - Language: C#, HLSL
 
 ## Project Setup
-This project does not contain all of the files to run locally, however it does contain the primary script *PlanetGenerator.cs* so the code can be reviewed. Note that the code was left purposefully uncleaned; any debugging statements or superfluous methods that were originally written while testing are still there. At some point, when there is more to this project, it will be able to be downloaded locally.
+This project contains all of the files to be run locally.
 
-## Gameplay
-Although as of now, the only "gameplay" is changing random stats, a goal in the future is to make a playable character who can explore an entirely procedural solar system. This entails different bodies, e.g. gas giant, Goldilocks planet, asteroid, star, etc. Ideally this solar system would be simulated entirely with integration-based newtonian physics that are akin to the Outer Wilds gameplay loop.
+## Technical Highlights
+
+- **Procedural planet generation using an icosphere mesh**, supporting dynamic subdivision and normalization to maintain uniform vertex distribution across the sphere surface.
+
+- **GPU-based terrain generation via compute shaders**, using diffusion limited aggregation to produce believable mountain shapes at runtime.
+
+- **Physically-based atmospheric scattering model**, including Rayleigh scattering and optical depth integration using ray marching through a spherical atmosphere.
+
+- **Tectonic plate simulation system**, generating plate boundaries and motion vectors to drive large-scale terrain features such as mountain ranges and continental structures.
+
+- **Custom shader pipeline using Unity URP and HLSL**, including volumetric cloud rendering, atmospheric density falloff, and multi-pass post-processing effects.
+
+- **Modular procedural systems architecture**, enabling independent tuning of terrain, atmosphere, and cloud generation parameters through serialized configuration settings.
 
 ## Technical details & what I learned
 - This project has consisted almost entirely of math. I prefer this to my other projects, because of all the skills for development I'm most confident in my math ability. The first "phase" of the project was creating a sphere. I could've used a generic UV sphere supplied by blender or unity, but I wanted to generate my own to have fine control.
