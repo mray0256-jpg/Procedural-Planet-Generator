@@ -621,17 +621,15 @@ Thanks for reading! If you noticed any mistakes or would like to contact me, ple
 
 ## Sources & Inspirations
 - Outer Wilds Technical Presentation: [Hosted by Unity](https://www.youtube.com/watch?v=Ww12q6HsmJA)
-- Tectonics: [Fractal Philosophy on Youtube](https://www.youtube.com/watch?v=7xL0udlhnqI)
-- Procedural Planets: [Sebastian Lague on Youtube](https://www.youtube.com/watch?v=lctXaT9pxA0&t=202s)
+- Tectonics: [Fractal Philosophy on YouTube](https://www.youtube.com/watch?v=7xL0udlhnqI)
+- Procedural Planets: [Sebastian Lague on YouTube](https://www.youtube.com/watch?v=lctXaT9pxA0&t=202s)
 - Golden Ratio: [Wolfram Math](https://mathworld.wolfram.com/RegularIcosahedron.html)
-- Mountains: [Josh's Channel on Youtube](https://www.youtube.com/watch?v=gsJHzBTPG0Y)
+- Mountains: [Josh's Channel on YouTube](https://www.youtube.com/watch?v=gsJHzBTPG0Y)
 - Planets: [Devote on Youtube](https://www.youtube.com/watch?v=CeJz8tsgCPw)
-- Making of Outer Wilds: [Documentary by /noclip on Youtube](https://www.youtube.com/watch?v=LbY0mBXKKT0)
+- Making of Outer Wilds: [Documentary by /noclip on YouTube](https://www.youtube.com/watch?v=LbY0mBXKKT0)
 - GPU-based DLA: [Article by Mykola Haltiuk](https://medium.com/@goader_/diffusion-limited-aggregation-in-a-highly-parallel-fashion-using-cuda-954ee66137e2)
 - RNG: [Article by Nathan Reed](https://www.reedbeta.com/blog/hash-functions-for-gpu-rendering/), [Article by Mark Jarzynski & Marc Oblano](https://jcgt.org/published/0009/03/02/paper.pdf)
--//Guerrilla games post
--//Sean O'Neal
--//Sebastian Lague
--//triple a games clouds guy
--//Shadertoy perlin-worley
--//New mountains technique  
+- Clouds: [Presentation by Andrew Schneider](https://gdcvault.com/play/1028023/The-Real-Time-Volumetric-Superstorms) & [SimonDev on YouTube](https://www.youtube.com/watch?v=Qj_tK_mdRcA&t=77s)
+- Atmosphere: [Paper by Sean O'Neil](https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-16-accurate-atmospheric-scattering) & [Sebastian Lague on YouTube](https://www.youtube.com/watch?v=DxfEbulyFcY)
+- Perlin-Worley Noise: [Shader by piyushslayer on Shadertoy](https://www.shadertoy.com/view/3dVXDc)
+- Candidate for Terrain Generation: [runevision on YouTube](https://www.youtube.com/watch?v=r4V21_uUK8Y)
