@@ -18,21 +18,23 @@ This project contains all of the files to be run locally.
 
 ## Technical Highlights
 
-- **Procedural planet generation using an icosphere mesh**, supporting dynamic subdivision and normalization to maintain uniform vertex distribution across the sphere surface.
+- **Procedural planet generation using an icosphere mesh**
 
-- **GPU-based terrain generation via compute shaders**, using diffusion limited aggregation to produce believable mountain shapes at runtime.
+- **GPU-based terrain generation via compute shaders**, using diffusion limited aggregation to produce believable mountain shapes at runtime
 
-- **Physically-based atmospheric scattering model**, including Rayleigh scattering and optical depth integration using ray marching through a spherical atmosphere.
+- **Tectonic plate simulation system**, generating plate boundaries and Euler poles to organically determine large-scale terrain features such as mountain
 
-- **Tectonic plate simulation system**, generating plate boundaries and motion vectors to drive large-scale terrain features such as mountain ranges and continental structures.
+- **Physically-based atmospheric scattering model**, including Rayleigh scattering and optical depth integration using ray marching through a spherical atmosphere
 
-- **Custom shader pipeline using Unity URP and HLSL**, including volumetric cloud rendering, atmospheric density falloff, and multi-pass post-processing effects.
-
-- **Modular procedural systems architecture**, enabling independent tuning of terrain, atmosphere, and cloud generation parameters through serialized configuration settings.
+- **Volumetric noise-based clouds**, including fractal brownian motion, eroded perlin-worley noise, raymarching, and dual-lobe scattering
+  
+- **Modular procedural systems architecture**, enabling independent tuning of terrain, atmosphere, and cloud generation parameters in the editor at runtime
 
 ## Technical details & what I learned
-- This project has consisted almost entirely of math. I prefer this to my other projects, because of all the skills for development I'm most confident in my math ability. The first "phase" of the project was creating a sphere. I could've used a generic UV sphere supplied by blender or unity, but I wanted to generate my own to have fine control.
+-  Note before you begin reading: I have been working on this for about four months. Alongside progress on the project, you will see me progress as a graphics programmer and Unity developer. I first learned how to code basic python about a year ago, and I first started Unity seven months ago. The first few sections are unpolished and amatuer, but I think they show growth so I've left them largely untouched.
 
+- This project has consisted almost entirely of math. I prefer this to my other projects, because of all the skills for development I'm most confident in my math ability. I've decided to split the project into phases due to it's modular nature. The first "phase" of the project was creating a sphere. I could've used a generic UV sphere supplied by blender or unity, but I wanted to generate my own to have fine control.
+- 
 - **Icosphere:**  
   This was a lot of index math. I have pages and pages of subdivided triangles with illegibly scribbled numbers that somehow made sense as I made it. If I redid it, I probably would've spent more time making an ironclad winding pattern so the vertices and faces are generated neatly, but as of now they're somewhat messy. As a result, I had to make redundancy-checker funcitons that are not exactly optimal. Additionally, there is no tessellation and no plans for it; but if I were to improve the sphere, that would be on the list.
 
