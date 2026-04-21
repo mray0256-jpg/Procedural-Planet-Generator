@@ -33,7 +33,7 @@ This project contains all of the files to be run locally.
 -  Note before you begin reading: I have been working on this for about four months. Alongside progress on the project, you will see me progress as a graphics programmer and Unity developer. I first learned how to code basic python about a year ago, and I first started Unity seven months ago. The first few sections are unpolished and amatuer, but I think they show growth so I've left them largely untouched.
 
 - This project has consisted almost entirely of math. I prefer this to my other projects, because of all the skills for development I'm most confident in my math ability. I've decided to split the project into phases due to it's modular nature. The first "phase" of the project was creating a sphere. I could've used a generic UV sphere supplied by blender or unity, but I wanted to generate my own to have fine control.
-- 
+  
 - **Icosphere:**  
   This was a lot of index math. I have pages and pages of subdivided triangles with illegibly scribbled numbers that somehow made sense as I made it. If I redid it, I probably would've spent more time making an ironclad winding pattern so the vertices and faces are generated neatly, but as of now they're somewhat messy. As a result, I had to make redundancy-checker funcitons that are not exactly optimal. Additionally, there is no tessellation and no plans for it; but if I were to improve the sphere, that would be on the list.
 
