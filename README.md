@@ -541,7 +541,7 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 
   Now we've reached the ray marching functions. In math, an integral represents an infinite sum. In code, we unfortunately cannot do that. Graphics programming is all about the art of approximation. The typical response to an integral, if the math cannot be hand-calculated, is to create a for-loop and turn the integral into a finite summation. A compromise is then presented to the programmer: increase the iterations, boosting visual fidelity but compromising on speed, or decrease the iterations and accept a lesser result.
 
-  The optical depth represents a sum of densities along some ray. Imagine we have a point along the atmosphere. The optical depth asks: how much light from the sun reaches this point? Furthermore, it could be used to ask: how much of *that* light reaches the viewer? The way light is treated is akin to a probability: what are the chances a ray of light, scattered through aerosols or clouds or o2 particles, might hit the viewers eyes? 
+  The optical depth represents a sum of densities along some ray. Imagine we have a point along the atmosphere. The optical depth asks: how much light from the sun reaches this point? Furthermore, it can reused to ask: how much of *that* light reaches the viewer? The way light is treated is akin to a probability: what are the chances a ray of light, scattered through aerosols or clouds or o2 particles, might hit the viewers eyes? 
 
   In-Scattering: $InScattering = I_s(\lambda)\cdot K(\lambda)\cdot F(\theta,g)\cdot \int_{P_b}^{P_a}(den \cdot e^{(-OD_{Sun} \cdot OD_{ViewRay})})ds$
 
