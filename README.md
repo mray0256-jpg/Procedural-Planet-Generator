@@ -529,9 +529,10 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 
   Henyey-Greenstein: $F(\theta, g) = \frac{1}{4\pi}\cdot \frac{1-g^2}{(1 + g^2-2g \cdot cos(\theta))^\frac{3}{2}}$
 
-  The Henyey-Greenstein equation represents scattering. Imagine looking in the direction of the sun, but you see a cloud along the way. The cloud will have a silvery outline; that effect is calculated by this function. Here, $theta $ represents the view direction (in code, we pass this in as cosTheta because a dot product has a magnitude |a||b|cos(theta). Since a and b, viewDir and sunDir, are unit vectors we can avoid an extra calculation), and g represents the direction of scattering. Clouds, being white or grey, scatter more colors forward with a g value of ~0.8 (called Mie Scattering). The atmosphere scatters light in all directions equally, with a g value of 0 (called Rayleigh Scattering).
+  The Henyey-Greenstein equation represents the directions light might scatter. Imagine looking in the direction of the sun, but you see a cloud along the way. The cloud will have a silvery outline; that effect is calculated by this function. Here, $theta $ represents the view direction (in code, we pass this in as cosTheta because a dot product has a magnitude |a||b|cos(theta). Since a and b, viewDir and sunDir, are unit vectors we can avoid an extra calculation), and g represents the direction of scattering. Clouds, being white or grey, scatter more colors forward with a g value of ~0.8 (called Mie Scattering). The atmosphere scatters light in all directions equally, with a g value of 0 (called Rayleigh Scattering).
 
- ///picture demonstrating mie vs rayleigh
+ <img width="397" height="127" alt="images" src="https://github.com/user-attachments/assets/1dbbe1db-550d-4539-b076-f32f442ed58c" /><br>
+ *Rayleigh Scattering (g = 0) and Mie Scattering (g ~ 0.8) represented by Henyey-Greenstein function*
 
   Density: $den=e^{\frac{-h}{H_0}}$
 
