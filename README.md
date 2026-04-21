@@ -549,7 +549,7 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 Finally, the in-scattering equation puts it all together. It is essentially a scaled summation of optical depths. If each optical depth calculates light at one point, the in scattering equations attempts to calculate *all* points along a given ray. In code, we have a loop that runs numScatters time; each time it calls the OpticalDepth function which runs numOpticals times. If we choose large numbers, the scene might look nice, but it will get out of hand very quickly. One of the challenges of this atmosphere shader is the sheer quantity of parameters. There are *34* of them! The goal is to balance visuals with computation. Tweaking took a good long time, but it was worth it.
 
 <img width="500" height="117" alt="16_atmospheric_02" src="https://github.com/user-attachments/assets/4f41f664-6363-48d8-b364-edd2ed14c1d7" /><br>
-*Scattering Demonstration*
+*Figure X: Scattering Diagram*
 
 Now that we have our equations, we should port them to code. Immediately, we run into a problem. There is nothing in the scene to actually raymarch through. To keep it procedural, we create a fullscreen shader and apply it to a sphere that exists purely mathematically. This shader runs in whats called a fragment shader. These take the triangles on our screen, break them up into pixels (fragments), and render them. We can use some fancy linear algebra to determine our world space camera position and then calculate the ray direction of every pixel. We can also access the depth buffer and linearize it so we don't accidentally render the clouds behind the planet. This is the data the computer gives us, but it's not yet what we need. For the atmosphere and clouds, we need two more things from these rays: A), when does the ray the atmosphere? And B), how far through the atmosphere does it traverse? These are necessary to compute the correct densities in the correct locations. Without it, the computer wouldn't know where to render anything.
 
@@ -557,15 +557,18 @@ Now that we have our equations, we should port them to code. Immediately, we run
 
   To calculate these, we use what's called a ray-sphere intersection. They are quite fun to calculate on one's own. It's the kind of challenge that is simple enough not to be daunting but also not so easy it's boring. If we had a float3 representing our center, and a ray, we could use trigonometry to find the distance between the center and the nearest point on the ray. 
 
-  //raysphere pictures
-  
+  <img width="400" height="300" alt="raysphere4" src="https://github.com/user-attachments/assets/b1175c19-ebb3-4303-bf2f-ed9513f845a8" /><br>
+*Figure X: Ray-Sphere Intersection Diagram*
+
   First, we use our rayOrigin to find a vector to the center of the sphere. Then, we take a dot product between sphereVec and rayVec. This tells us exactly how long the rayVec must be for the most promixity to the sphere center. We will call this closest point p. Before continuing, we always want to work in distances squared. Sqrt functions are expensive. We actually determine whether p is in the sphere through the quadratic formula's discriminant: b^2 - 4ac. If the discriminant is > 0, e.g. has two real roots, we know the ray passes through two points on the sphere. 
   
   We use point p's distance from the center of the circle to create a new right triangle. We know the length between p and the center, and we know the hypotenuse must be the radius of the sphere, because we are trying to find the viewRay's entry point into the sphere. Now all we do is find the distance from p to the edge of the sphere. Now we can calculate the distance to the front and back edge of the sphere, because they will always have the same distance from point p. Using this, we return our distanceTo and distanceThrough values, completing the function.
 
   Once this has all been placed into code, we have a basic atmosphere with tunable colors!
 
-  //pictures
+  <img width="515" height="320" alt="AtmosphereScattering" src="https://github.com/user-attachments/assets/c541d221-a942-4dc3-b44e-43b4ae96bb0b" /><br>
+*Figure X: Changing Scattering Parameters to Change Atmosphere Color*
+
 
   //perhaps at bits of code for the atmosphere itself?
 
@@ -595,7 +598,6 @@ Noise can be layered, too. Here, I've stacked 7 layers of Worley noise on top of
   <img width="293" height="289" alt="image" src="https://github.com/user-attachments/assets/9efcb6f5-0ad9-4322-b6dc-1e06ae264bec" /><br>
 *Figure x: Worley FBM*
 
-
 To generate the clouds, we use a strange bastard of these two noises: perlin-worley. A remap function can be used, which takes a value of a range (min,max) and uses that ratio to place it in a new (min,max). This function is handy because it will leave high-density regions at the core of the cloud largely unnaffected, but mid or low density regions can have substantial effects. This means our new function keeps the organic shapes of perlin, but inscribes the billowiness of worley onto the high-density regions of it.
 
   <img width="200" height="197" alt="image" src="https://github.com/user-attachments/assets/bb230a9c-aeaa-4386-a7a2-ca5fb361fd3e" /><br>
@@ -603,12 +605,22 @@ To generate the clouds, we use a strange bastard of these two noises: perlin-wor
 
 This noise was combined with some other effects and used as a replacement for the density function shown above. The result has the unmistakable appearance of a cloud. Of course, there's plenty of room for improvement. The clouds only have a stratus layer; it would be beneficial to also have a cirrus band (long wispy clouds very, very high up). Additionally, the erosion of the edges of the clouds is subpar at the moment. It could be improved by carving wispy shapes at the base of a cloud and billowy shapes at the top of a cloud. Of course, there's also optimization. The main resource I used for these, Guerilla Games' Horizon series, uses temporal upscaling. I don't have plans for adding that, but I do intend to improve the scattering by introducing a variable step size to the ray march. This will hopefully allow for less ray marches while increasing the visuals up-close.
 
-//cloud pics
-
-Now that the atmosphere is largely complete, we can put everything together!
+Now that the atmosphere is largely complete, we can put everything together! The last real step is changing parameters or combining the noise in unique ways to achieve different effects.
   
 <img width="1191" height="990" alt="AtmosphereDemonstration" src="https://github.com/user-attachments/assets/c4916a23-b126-43c6-9f88-a60dc51453d3" /><br>
 *Figure XX: Clouds, atmosphere, and planet running at 270 FPS on Unity Editor*
+
+<img width="349" height="335" alt="image" src="https://github.com/user-attachments/assets/b67b9398-451b-4566-bbbb-c06807e1aca3" /><br>
+*Figure X: Higher Resolution Clouds*
+
+<img width="409" height="361" alt="image" src="https://github.com/user-attachments/assets/e3055c1b-3368-495c-acc4-1ff51f1cb556" /><br>
+*Figure X: Also high res clouds*
+
+<img width="366" height="390" alt="image" src="https://github.com/user-attachments/assets/63ae95a1-df7a-47bc-a2ab-167e2d92b56e" /><br>
+*Figure X: Cartoonish clouds*
+
+<img width="325" height="340" alt="image" src="https://github.com/user-attachments/assets/eb4cee8c-965a-4b1f-81c6-d68f9e3fa17c" /><br>
+*Figure X: Thin, wisp clouds*
 
 ## Future Additions
 I hope to update this page every 2 weeks, as I have a number of additional "phases" planned.
