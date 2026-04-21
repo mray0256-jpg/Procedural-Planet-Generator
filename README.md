@@ -569,12 +569,13 @@ Now that we have our equations, we should port them to code. Immediately, we run
   <img width="515" height="320" alt="AtmosphereScattering" src="https://github.com/user-attachments/assets/c541d221-a942-4dc3-b44e-43b4ae96bb0b" /><br>
 *Figure X: Changing Scattering Parameters to Change Atmosphere Color*
 
-
-  //perhaps at bits of code for the atmosphere itself?
-
   As for improvements, there is always optimization. The optical depth can be a cheap 2D texture lookup instead of an expensive exp() function. As for function, the atmosphere currently doesn't interact with the ground or the clouds, which it should.
 
-  //more pictures
+<img width="640" height="473" alt="image" src="https://github.com/user-attachments/assets/80f2a35a-1b9d-41b8-82b5-ec44f42e929e" /><br>
+  *Figure X: Atmosphere from planet surface*
+
+<img width="502" height="362" alt="image" src="https://github.com/user-attachments/assets/864c0d9a-d32e-40ce-a6f8-c300e3b80d51" /><br>
+  *Figure X: Alien atmosphere!*
 
 Now that the atmosphere is finished, we can begin working on our clouds. They use a very similar process; you need optical depth, in-scattering, raymarching, and a raysphere intersection (the raysphere intersection can actually be optimized out by sharing the atmosphere's and then tweaking the values). However, they have one major difference: the density of clouds is *not* a nice and consistent exp() function. For this, we bring in noise and remap functions.
 
