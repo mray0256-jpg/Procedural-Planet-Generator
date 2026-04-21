@@ -2,11 +2,10 @@
 Side project inspired by the video game Outer Wilds.
 
 <img width="480" height="380" alt="image" src="https://github.com/user-attachments/assets/aefffacc-fcda-45a0-b317-c3a0cd389a4b" /><br>
-*Planet complete with physically-based atmosphere and clouds*
-
+*Procedural planet with physically-based atmosphere and clouds*
 
 ## Overview
-- A project created to simulate planet generation. Currently a WIP with the hopes of being updated every two or so weeks.
+- A project created to simulate planet generation. Currently a WIP with the hopes of being updated every month or two.
 - I chose this project primarily because I liked the idea of a modular sort of simulation, in which prior algorithms were only indirectly related to future ones, allowing for less fear of breaking something & nonlinear features.
 
 ## Tech Stack
