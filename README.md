@@ -529,10 +529,10 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 
   Henyey-Greenstein: $F(\theta, g) = \frac{1}{4\pi}\cdot \frac{1-g^2}{(1 + g^2-2g \cdot cos(\theta))^\frac{3}{2}}$
 
-  The Henyey-Greenstein equation represents the directions light might scatter. Imagine looking in the direction of the sun, but you see a cloud along the way. The cloud will have a silvery outline; that effect is calculated by this function. Here, $theta $ represents the view direction (in code, we pass this in as cosTheta because a dot product has a magnitude |a||b|cos(theta). Since a and b, viewDir and sunDir, are unit vectors we can avoid an extra calculation), and g represents the direction of scattering. Clouds, being white or grey, scatter more colors forward with a g value of ~0.8 (called Mie Scattering). The atmosphere scatters light in all directions equally, with a g value of 0 (called Rayleigh Scattering).
+  The Henyey-Greenstein equation represents the directions light might scatter. Imagine looking in the direction of the sun, but you see a cloud along the way. The cloud will have a silvery outline; that effect is calculated by this function. Here, $\theta$ represents the view direction (in code, we pass this in as cosTheta because a dot product has a magnitude |a||b|cos(theta). Since a and b, viewDir and sunDir, are unit vectors we can avoid an extra calculation), and g represents the direction of scattering. Clouds, being white or grey, scatter more colors forward with a g value of ~0.8 (called Mie Scattering). The atmosphere scatters light in all directions equally, with a g value of 0 (called Rayleigh Scattering).
 
- <img width="397" height="127" alt="images" src="https://github.com/user-attachments/assets/1dbbe1db-550d-4539-b076-f32f442ed58c" /><br>
- *Rayleigh Scattering (g = 0) and Mie Scattering (g ~ 0.8) represented by Henyey-Greenstein function*
+  <img width="397" height="127" alt="images" src="https://github.com/user-attachments/assets/1dbbe1db-550d-4539-b076-f32f442ed58c" /><br>
+*Rayleigh Scattering (g = 0) and Mie Scattering (g ~ 0.8) represented by Henyey-Greenstein function*
 
   Density: $den=e^{\frac{-h}{H_0}}$
 
@@ -547,6 +547,9 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
   In-Scattering: $InScattering = I_s(\lambda)\cdot K(\lambda)\cdot F(\theta,g)\cdot \int_{P_b}^{P_a}(den \cdot e^{(-OD_{Sun} \cdot OD_{ViewRay})})ds$
 
 Finally, the in-scattering equation puts it all together. It is essentially a scaled summation of optical depths. If each optical depth calculates light at one point, the in scattering equations attempts to calculate *all* points along a given ray. In code, we have a loop that runs numScatters time; each time it calls the OpticalDepth function which runs numOpticals times. If we choose large numbers, the scene might look nice, but it will get out of hand very quickly. One of the challenges of this atmosphere shader is the sheer quantity of parameters. There are *34* of them! The goal is to balance visuals with computation. Tweaking took a good long time, but it was worth it.
+
+<img width="500" height="117" alt="16_atmospheric_02" src="https://github.com/user-attachments/assets/4f41f664-6363-48d8-b364-edd2ed14c1d7" /><br>
+*Scattering Demonstration*
 
 Now that we have our equations, we should port them to code. Immediately, we run into a problem. There is nothing in the scene to actually raymarch through. To keep it procedural, we create a fullscreen shader and apply it to a sphere that exists purely mathematically. This shader runs in whats called a fragment shader. These take the triangles on our screen, break them up into pixels (fragments), and render them. We can use some fancy linear algebra to determine our world space camera position and then calculate the ray direction of every pixel. We can also access the depth buffer and linearize it so we don't accidentally render the clouds behind the planet. This is the data the computer gives us, but it's not yet what we need. For the atmosphere and clouds, we need two more things from these rays: A), when does the ray the atmosphere? And B), how far through the atmosphere does it traverse? These are necessary to compute the correct densities in the correct locations. Without it, the computer wouldn't know where to render anything.
 
@@ -572,19 +575,20 @@ Now that we have our equations, we should port them to code. Immediately, we run
 
 Now that the atmosphere is finished, we can begin working on our clouds. They use a very similar process; you need optical depth, in-scattering, raymarching, and a raysphere intersection (the raysphere intersection can actually be optimized out by sharing the atmosphere's and then tweaking the values). However, they have one major difference: the density of clouds is *not* a nice and consistent exp() function. For this, we bring in noise and remap functions.
 
-//Perlin noise
-
 The first noise algorithm we make is called Perlin Noise. It is unbelievably useful. When you watch a movie or play a game and see some fancy visual effects, 80% of the time it's a variation of perlin noise. Fog? Clouds? Water? Fire? Dissolving? In the 80's, Ken Perlin sought to make a form of visual noise that was organic in appearance, but generated entirely procedurally with just math. For 3D noise, the algorithm takes a grid of cubes.
 
-//Image of just corners
+  <img width="480" height="240" alt="PerlinNoiseGradientGrid svg" src="https://github.com/user-attachments/assets/4310dadc-56c2-4677-9e93-ad27ae59e4a2" /><br>
+*Figure X: Depiction of Perlin Noise Generation*
 
 The position of each corner is put into a hash function, and the value is used to create a random unit vector. Every corner is assigned one. When the actual texture itself is generated, there might be 10 or 50 texels between each corner of this grid. At each texel, we find the vector from the texel location to each of the four corners. Then, we compare that vector to the random unit vector via a dot product.
 
-//image of 2D perlin noise generation
+  <img width="225" height="225" alt="download" src="https://github.com/user-attachments/assets/85f2fa5e-1758-4a0e-9009-5598b1da02ce" /><br>
+*Figure X: 2D Perlin Noise*
 
 This generates a nice gradient with large blobs that are useful for organic shapes and patterns. The other noise used for these clouds was worley noise. It uses a similar process: start with a 3D grid, and in each cell place a random point. It could be located anywhere within the cell's bounds. When the texture is generated, each texel corresponds to the distance of the nearest random point. Worley noise creates blobby, cell-like shapes. They can be used for caustics, terrain generation, or, luckily, clouds. 
 
-//worley
+  <img width="250" height="250" alt="2d-cnoise-2x2" src="https://github.com/user-attachments/assets/20b407f1-2c5d-45f1-ba12-80fbf7da30d5" /><br>
+*Figure X: Inverted Worley Noise*
 
 Noise can be layered, too. Here, I've stacked 7 layers of Worley noise on top of each other, increasing the frequency but decreasing the amplitude of each. This technique is known as fractal brownian motion.
 
