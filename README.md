@@ -608,19 +608,19 @@ This noise was combined with some other effects and used as a replacement for th
 Now that the atmosphere is largely complete, we can put everything together! The last real step is changing parameters or combining the noise in unique ways to achieve different effects.
   
 <img width="1191" height="990" alt="AtmosphereDemonstration" src="https://github.com/user-attachments/assets/c4916a23-b126-43c6-9f88-a60dc51453d3" /><br>
-*Figure XX: Clouds, atmosphere, and planet running at 270 FPS on Unity Editor*
+*Figure XX: Clouds, atmosphere, and planet running at 270 FPS on Unity editor*
 
-<img width="349" height="335" alt="image" src="https://github.com/user-attachments/assets/b67b9398-451b-4566-bbbb-c06807e1aca3" /><br>
-*Figure X: Higher Resolution Clouds*
+<img width="347" height="326" alt="image" src="https://github.com/user-attachments/assets/c0eff448-2428-40d4-8b98-34b97abb693e" /><br>
+*Figure X: Higher resolution clouds without planet*
 
 <img width="409" height="361" alt="image" src="https://github.com/user-attachments/assets/e3055c1b-3368-495c-acc4-1ff51f1cb556" /><br>
-*Figure X: Also high res clouds*
+*Figure X: More High-res clouds!*
 
 <img width="366" height="390" alt="image" src="https://github.com/user-attachments/assets/63ae95a1-df7a-47bc-a2ab-167e2d92b56e" /><br>
 *Figure X: Cartoonish clouds*
 
 <img width="325" height="340" alt="image" src="https://github.com/user-attachments/assets/eb4cee8c-965a-4b1f-81c6-d68f9e3fa17c" /><br>
-*Figure X: Thin, wisp clouds*
+*Figure X: Thin, wispy clouds*
 
 ## Future Additions
 I hope to update this page every 2 weeks, as I have a number of additional "phases" planned.
