@@ -553,8 +553,6 @@ Finally, the in-scattering equation puts it all together. It is essentially a sc
 
 Now that we have our equations, we should port them to code. Immediately, we run into a problem. There is nothing in the scene to actually raymarch through. To keep it procedural, we create a fullscreen shader and apply it to a sphere that exists purely mathematically. This shader runs in whats called a fragment shader. These take the triangles on our screen, break them up into pixels (fragments), and render them. We can use some fancy linear algebra to determine our world space camera position and then calculate the ray direction of every pixel. We can also access the depth buffer and linearize it so we don't accidentally render the clouds behind the planet. This is the data the computer gives us, but it's not yet what we need. For the atmosphere and clouds, we need two more things from these rays: A), when does the ray the atmosphere? And B), how far through the atmosphere does it traverse? These are necessary to compute the correct densities in the correct locations. Without it, the computer wouldn't know where to render anything.
 
-//fragment shader code snippet?
-
   To calculate these, we use what's called a ray-sphere intersection. They are quite fun to calculate on one's own. It's the kind of challenge that is simple enough not to be daunting but also not so easy it's boring. If we had a float3 representing our center, and a ray, we could use trigonometry to find the distance between the center and the nearest point on the ray. 
 
   <img width="400" height="300" alt="raysphere4" src="https://github.com/user-attachments/assets/b1175c19-ebb3-4303-bf2f-ed9513f845a8" /><br>
