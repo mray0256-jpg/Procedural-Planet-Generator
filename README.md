@@ -1,7 +1,7 @@
 # Procedural-Planet-Generator
 Side project inspired by the video game Outer Wilds.
 
-<img width="356" height="336" alt="image" src="https://github.com/user-attachments/assets/b8f3aee1-5e2b-4b2d-af82-eaeb7aa8e161" />
+<img width="301" height="314" alt="image" src="https://github.com/user-attachments/assets/8c31b9f5-21d8-4e5e-a8e3-4955eaceaf17" /><br>
 *Planet complete with physically-based atmosphere and clouds*
 
 
