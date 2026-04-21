@@ -1,5 +1,5 @@
 # Procedural-Planet-Generator
-Into graphics programming project inspired by the video game Outer Wilds.
+Graphics programming project inspired by the video game Outer Wilds.
 
 <img width="480" height="380" alt="image" src="https://github.com/user-attachments/assets/aefffacc-fcda-45a0-b317-c3a0cd389a4b" /><br>
 *Procedural planet with physically-based atmosphere and clouds*
