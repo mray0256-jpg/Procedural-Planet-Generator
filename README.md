@@ -597,9 +597,9 @@ Noise can be layered, too. Here, I've stacked 7 layers of Worley noise on top of
 
 
 To generate the clouds, we use a strange bastard of these two noises: perlin-worley. A remap function can be used, which takes a value of a range (min,max) and uses that ratio to place it in a new (min,max). This function is handy because it will leave high-density regions largely unnaffected, but mid or low density regions can have substantial effects. This means our new function keeps the organic shapes of perlin, but inscribes the billowiness of worley onto the high-density regions of it.
-//^^^ this is incorrect
 
-//perlin-worley
+  <img width="200" height="197" alt="image" src="https://github.com/user-attachments/assets/bb230a9c-aeaa-4386-a7a2-ca5fb361fd3e" /><br>
+*Figure X: Perlin-Worley*
 
 This noise was combined with some other effects and used as a replacement for the density function shown above. The result has the unmistakable appearance of a cloud. Of course, there's plenty of room for improvement. The clouds only have a stratus layer; it would be beneficial to also have a cirrus band (long wispy clouds very, very high up). Additionally, the erosion of the edges of the clouds is subpar at the moment. It could be improved by carving wispy shapes at the base of a cloud and billowy shapes at the top of a cloud. Of course, there's also optimization. The main resource I used for these, Guerilla Games' Horizon series, uses temporal upscaling. I don't have plans for adding that, but I do intend to improve the scattering by introducing a variable step size to the ray march. This will hopefully allow for less ray marches while increasing the visuals up-close.
 
