@@ -75,7 +75,7 @@ public class PlanetGenerator : MonoBehaviour
     [UnityEngine.Range(0, 250)]
     public int numSubs = 0;
 
-    float planetRadius = 18.0f;
+    float planetRadius = 28.0f;
 
     [UnityEngine.Range(0, 1)]
     public float radiusLerp = 0;
@@ -643,9 +643,9 @@ public class PlanetGenerator : MonoBehaviour
     float DLAWeight = 0.6f;
     int DLAStep = 1;
     int DLAMax = 5000;
-    int DLAblurs = 20;
+    int DLAblurs = 8;
     int particleStride = 24;
-    float mountainRatio = 0.2f;
+    float mountainRatio = 0.25f;
     int[] neighborsArray;
 
     //compute buffers

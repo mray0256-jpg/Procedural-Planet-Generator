@@ -150,7 +150,7 @@ Shader "Planets/AtmosphereShader"
                 float3 rayDir = normalize(i.viewVector);
                 float rawDepth = SampleSceneDepth(uv);
                 float sceneDepth = LinearEyeDepth(rawDepth, _ZBufferParams);
-                
+
                 float3 sunDir = normalize(sunCenter - planetCenter);
                 float4 returnColor = sceneColor;
                 float3 zero = float3(0, 0, 0);
@@ -162,7 +162,7 @@ Shader "Planets/AtmosphereShader"
                 {
                     
                     float2 frontCloudData = float2(outerCloudDists.x + jitter * jitterStrength, min(sceneDepth - outerCloudDists.x, outerCloudDists.y));
-                    float4 front = DetermineClouds(rayOrigin, rayDir, frontCloudData, sunDir, sceneColor, numCloudScatters * 2);
+                    float4 front = DetermineClouds(rayOrigin, rayDir, frontCloudData, sunDir, sceneColor, numCloudScatters);
                     c = front.xyz;
                     returnColor *= front.a;
                 }

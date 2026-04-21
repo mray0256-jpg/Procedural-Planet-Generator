@@ -18,10 +18,9 @@ float smootherstep(float edge0, float edge1, float x)
 
 float2 RaySphere(float3 sphereCenter, float radius, float3 rayOrigin, float3 rayDir, float sceneDepth)
 {
-    float3 viewVector = normalize(rayDir);
-    float viewLength = length(rayDir);
-	
-    //float linearDepth = LinearEyeDepth(sceneDepth, _ZBufferParams);
+    //float3 viewVector = normalize(rayDir);
+    float3 viewVector = rayDir;
+    //float viewLength = length(rayDir);
 	
 	float3 offset = rayOrigin - sphereCenter;
 	float a = 1; // Set to dot(rayDir, rayDir) if rayDir might not be normalized
@@ -46,17 +45,16 @@ float2 RaySphere(float3 sphereCenter, float radius, float3 rayOrigin, float3 ray
     return dsts;
 }
 
-float RayleighPhaseFunction(float theta)
+float HenyeyGreenstein(float g, float cosTheta)
 {
-    float phase = 3 * (1 + (cos(theta) * cos(theta)) / 4);
-    return phase;
+    return (1 / (4 * 3.1415)) * ((1 - g * g) / pow(1.0 + g * g - 2.0 * g * cosTheta, 1.5));
 }
 
 float densityAtHeight(float3 pos)
 {
 	float heightAbovePlanet = length(pos - planetCenter) - planetRadius;
     float height01 = saturate(heightAbovePlanet / (atmosphereRadius - planetRadius));
-    return exp(-height01 * heightScalar) * (1 - height01);
+    return saturate(exp(-height01 * heightScalar));
 }
 
 float opticalDepth(float3 rayDir, float rayLength, float3 rayOrigin)
@@ -75,11 +73,8 @@ float opticalDepth(float3 rayDir, float rayLength, float3 rayOrigin)
 
 float3 inScattering(float3 pos, float3 rayDir, float viewLength, float3 sunDir)
 {
-    float lengthSun = RaySphere(planetCenter, planetRadius, pos, sunDir, 99999).y;
+    float lengthSun = RaySphere(planetCenter, atmosphereRadius, pos, sunDir, 99999).y;
 
-    //float3 toCam = pos - rayOrigin;
-    //float lengthCam = length(toCam);
-    
     float density = densityAtHeight(pos);
     return density * exp(-(opticalDepth(sunDir, lengthSun, pos) + opticalDepth(rayDir, viewLength, pos)) * scattering);
 }
@@ -100,9 +95,9 @@ float3 CalculateLight(float3 rayOrigin, float3 rayDir, float2 dsts, float3 sunDi
         light += (inScattering(samplePoint, -rayDir, stepSize * i, sunDir) * stepSize * scattering);
         samplePoint += rayDir * stepSize;
     }
-    //float theta = acos(dot(rayDir, sunDir) / dstThrough);
     
-    light *= /*RayleighPhaseFunction(theta) */ sunIntensity;
+    float cosTheta = dot(rayDir, sunDir);
+    light *= HenyeyGreenstein(0, cosTheta) * sunIntensity;
     
     return sceneCol + light;
 }
@@ -113,17 +108,12 @@ float remap(float value, float minOld, float maxOld, float minNew, float maxNew)
     return minNew + (value - minOld) * ratio;
 }
 
-float MiePhaseFunction(float g, float cosTheta)//Change to be dual lob haley greenstein or whatever
-{
-    return (1 / (4 * 3.1415)) * ((1 - g * g) / pow(1.0 + g * g - 2.0 * g * cosTheta, 1.5));
-}
-
 float dualLobPhaseFunction(float forwardScattering, float backScattering, float cosTheta, float t)
 {
-    return baseBrightness + lerp(MiePhaseFunction(backScattering, cosTheta), MiePhaseFunction(forwardScattering, cosTheta), t) * phaseStrength;
+    return baseBrightness + lerp(HenyeyGreenstein(backScattering, cosTheta), HenyeyGreenstein(forwardScattering, cosTheta), t) * phaseStrength;
 }
 
-float sampleCloudNoise(float3 pos)
+float sampleCloudNoise(float3 pos, float bandRatio)
 {
     //determine coordinates for texture sampling
     float time = _Time.y;
@@ -132,29 +122,34 @@ float sampleCloudNoise(float3 pos)
     
     float4 wp = worleyPersistance;
     float4 baseNoise = _Noise3D.SampleLevel(sampler_Noise3D, baseCoord, 0);
-    float baseFBM = baseNoise.r * wp.r + baseNoise.g * wp.g + baseNoise.b * wp.b + baseNoise.a * wp.a;
+    if (baseNoise.r <= 0) return 0;
+    float baseFBM = baseNoise.g * wp.g + baseNoise.b * wp.b + baseNoise.a * wp.a;
     //return baseFBM;
+    
+    //return baseNoise.r;
+    //float cloud = remap(baseNoise.r, baseFBM * bandRatio, 1, 0, 1);
+    float cloud = lerp(1, baseFBM, bandRatio) * baseNoise.r;
+    //return cloud;
     
     wp = detailPersistance;
     float4 detailNoise = _DetailNoise3D.SampleLevel(sampler_DetailNoise3D, detailCoord, 0);
     float detailFBM = detailNoise.r * wp.r + detailNoise.g * wp.g + detailNoise.b * wp.b + detailNoise.a * wp.a;
     //return baseFBM;
-    float density = remap(baseFBM, detailFBM /* cloudRemap*/, 1.0, 0.0, 1.0);
+    float density = remap(cloud, (1 - detailFBM) * cloudRemap, 1.0, 0.0, 1.0);
     return saturate(density);
 }
 
 float cloudDensityAtStep(float3 pos)//Samples from our cloud-shaped texture
 {
-    float absorption = sampleCloudNoise(pos);
-    //return absorption;
-
     float distToCenter = length(pos - planetCenter);
     float distFromEdge = outerCloudRadius - distToCenter;
-    float bandRatio = saturate(distFromEdge / (outerCloudRadius - innerCloudRadius));
-    float fallOff = smootherstep(1, 1 - cloudFalloff, bandRatio) * smootherstep(0, cloudFalloff, bandRatio);
-
-    float finalDensity = max(0, absorption - cloudDensityThreshold);
-    return finalDensity * cloudDensityMultiplier * fallOff;
+    float bandRatio = 1 - saturate(distFromEdge / (outerCloudRadius - innerCloudRadius));
+    float fallOff = smootherstep(1, 0.8, bandRatio) * smootherstep(0, 0.2, bandRatio);
+    float absorption = sampleCloudNoise(pos, bandRatio);
+    
+    float finalDensity = max(0, absorption - cloudDensityThreshold) * fallOff;
+    //finalDensity = remap(finalDensity * fallOff, 1 - cloudCoverage, 1.0, 0.0, 1.0);
+    return finalDensity * cloudDensityMultiplier;
 }
 
 float cloudOpticalDepth(float3 rayDir, float3 rayOrigin)
@@ -186,6 +181,8 @@ float4 DetermineClouds(float3 rayOrigin, float3 rayDir, float2 dsts, float3 sunD
     float3 samplePoint = rayOrigin + rayDir * (dsts.x + epsilon);
     dsts.y -= (epsilon * 2);
     float stepSize = dsts.y / (numCloudScatters - 1); 
+    
+    //return cloudDensityAtStep(samplePoint);
     
     float cosTheta = dot(rayDir, sunDir);
     float phase = dualLobPhaseFunction(cloudForwardScattering, cloudBackScattering,

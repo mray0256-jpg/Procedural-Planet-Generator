@@ -127,39 +127,39 @@ Material:
     - _planetRadius: 5
     - _scatteringConstant: 1
     - _sunIntensity: 1
-    - atmosphereRadius: 8
+    - atmosphereRadius: 40
     - baseBrightness: 0.6
-    - baseCloudSpeed: 0.1
+    - baseCloudSpeed: 0.02
     - cloudBackScattering: -0.3
     - cloudBandLength: 8.6
     - cloudDensityMultiplier: 20
-    - cloudDensityThreshold: 0.8
-    - cloudDetailScale: 0.015
-    - cloudFalloff: 0.3
+    - cloudDensityThreshold: 0.4
+    - cloudDetailScale: 0.06
+    - cloudFalloff: 0
     - cloudForwardScattering: 0.8
-    - cloudNoiseScale: 0.03
+    - cloudNoiseScale: 0.04
     - cloudRadius: 11.28
     - cloudRadiusOne: 4.16
     - cloudRadiusTwo: 3.5
     - cloudRemap: 0.3
     - cloudScatteringInterpolant: 0.5
     - darknessThreshold: 1
-    - detailCloudSpeed: 1
-    - heightScalar: 1
+    - detailCloudSpeed: 0.1
+    - heightScalar: 10
     - innerCloudRadius: 30
-    - jitterStrength: 3
+    - jitterStrength: 1
     - lightAbsorptionThroughCloud: 1
-    - lightAbsorptionTowardSun: 1
-    - numCloudOpticals: 10
-    - numCloudScatters: 32
+    - lightAbsorptionTowardSun: 2
+    - numCloudOpticals: 16
+    - numCloudScatters: 200
     - numOpticals: 8
-    - numScatters: 16
-    - outerCloudRadius: 35
+    - numScatters: 24
+    - outerCloudRadius: 32
     - phaseStrength: 0.75
     - phaseVal: 1
-    - planetRadius: 3
+    - planetRadius: 15
     - scatteringConstant: -24.9
-    - sunIntensity: 0.05
+    - sunIntensity: 2.4
     m_Colors:
     - _BackgroundColor: {r: 0.8627452, g: 0.07843138, b: 0.2352941, a: 1}
     - _BaseColor: {r: 1, g: 0, b: 0, a: 1}
@@ -170,13 +170,13 @@ Material:
     - _SpherePos: {r: 0, g: 0, b: 0, a: 0}
     - _planetCenter: {r: 0, g: 0, b: 0, a: 1}
     - _sunCenter: {r: 5, g: 5, b: 5, a: 1}
-    - detailPersistance: {r: 0, g: 0, b: 0, a: 0}
+    - detailPersistance: {r: 0.525, g: 0.25, b: 0.125, a: 0.1}
     - planetCenter: {r: 0, g: 0, b: 0, a: 1}
-    - scattering: {r: 38.09, g: 5.92, b: 9, a: 0}
-    - sunCenter: {r: 5, g: 5, b: 5, a: 1}
-    - sunCol: {r: 1, g: 1, b: 1, a: 0}
+    - scattering: {r: 3, g: 10, b: 22, a: 0}
+    - sunCenter: {r: -20, g: 0, b: 60, a: 1}
+    - sunCol: {r: 0.9, g: 0.75, b: 0.5, a: 0}
     - windDir: {r: 0.1, g: 0.1, b: 0.1, a: 1}
-    - worleyPersistance: {r: 0, g: 0, b: 0, a: 0}
+    - worleyPersistance: {r: 1, g: 0.625, b: 0.25, a: 0.125}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &6169874361805794634
