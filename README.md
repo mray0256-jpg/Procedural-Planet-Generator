@@ -615,10 +615,10 @@ Now that the atmosphere is largely complete, we can put everything together! The
 *Figure 31: More High-res clouds!*
 
 <img width="366" height="390" alt="image" src="https://github.com/user-attachments/assets/63ae95a1-df7a-47bc-a2ab-167e2d92b56e" /><br>
-*Figure X: Cartoonish clouds*
+*Figure 32: Cartoonish clouds*
 
 <img width="325" height="340" alt="image" src="https://github.com/user-attachments/assets/eb4cee8c-965a-4b1f-81c6-d68f9e3fa17c" /><br>
-*Figure 32: Thin, wispy clouds*
+*Figure 33: Thin, wispy clouds*
 
 ## Future Additions
 I hope to update this page every 2 weeks, as I have a number of additional "phases" planned.
