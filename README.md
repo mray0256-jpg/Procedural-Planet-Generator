@@ -528,10 +528,10 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 
   Henyey-Greenstein: $F(\theta, g) = \frac{1}{4\pi}\cdot \frac{1-g^2}{(1 + g^2-2g \cdot cos(\theta))^\frac{3}{2}}$
 
-  The Henyey-Greenstein equation represents the directions light might scatter. Imagine looking in the direction of the sun, but you see a cloud along the way. The cloud will have a silvery outline; that effect is calculated by this function. Here, $\theta$ represents the view direction (in code, we pass this in as cosTheta because a dot product has a magnitude |a||b|cos(theta). Since a and b, viewDir and sunDir, are unit vectors we can avoid an extra calculation), and g represents the direction of scattering. Clouds, being white or grey, scatter more colors forward with a g value of ~0.8 (called Mie Scattering). The atmosphere scatters light in all directions equally, with a g value of 0 (called Rayleigh Scattering).
+  The Henyey-Greenstein equation represents the directions light might scatter. Imagine looking in the direction of the sun, but you see a cloud along the way. The cloud will have a silvery outline; that effect is calculated by this function. Here, $\theta$ represents the view direction (in code, we pass this in as cosTheta because a dot product has a magnitude |a||b|cos(theta). Since a and b, viewDir and sunDir, are unit vectors we can avoid an extra calculation), and g represents how strongly the light scatters forward (see below). Clouds, being white or grey, scatter more colors forward with a g value of ~0.8 (called Mie Scattering). The atmosphere scatters light in all directions equally, with a g value of 0 (called Rayleigh Scattering).
 
-  <img width="397" height="127" alt="images" src="https://github.com/user-attachments/assets/1dbbe1db-550d-4539-b076-f32f442ed58c" /><br>
-*Figure 18: Rayleigh Scattering (g = 0) and Mie Scattering (g ~ 0.8) represented by Henyey-Greenstein function*
+<img width="397" height="127" alt="images" src="https://github.com/user-attachments/assets/1dbbe1db-550d-4539-b076-f32f442ed58c" /><br>
+  *Figure 18: Rayleigh Scattering (g = 0) and Mie Scattering (g ~ 0.8) represented by Henyey-Greenstein function*
 
   Density: $den=e^{\frac{-h}{H_0}}$
 
@@ -541,21 +541,21 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 
   Now we've reached the ray marching functions. In math, an integral represents an infinite sum. In code, we unfortunately cannot do that. Graphics programming is all about the art of approximation. The typical response to an integral, if the math cannot be hand-calculated, is to create a for-loop and turn the integral into a finite summation. A compromise is then presented to the programmer: increase the iterations, boosting visual fidelity but compromising on speed, or decrease the iterations and accept a lesser result.
 
-  The optical depth represents a sum of densities along some ray. Imagine we have a point along the atmosphere. The optical depth asks: how much light from the sun reaches this point? Furthermore, it can reused to ask: how much of *that* light reaches the viewer? The way light is treated is akin to a probability: what are the chances a ray of light, scattered through aerosols or clouds or o2 particles, might hit the viewers eyes? 
+  The optical depth represents a sum of densities along some ray. Imagine we have a point along the atmosphere. The optical depth asks: how much light from the sun reaches this point? Furthermore, the function can be recycled to answer the question: how much of *that* light reaches the viewer? The way light is treated is akin to a probability: what are the chances a ray of light, scattered through aerosols or clouds or o2 particles, might hit the viewers eyes? 
 
   In-Scattering: $InScattering = I_s(\lambda)\cdot K(\lambda)\cdot F(\theta,g)\cdot \int_{P_b}^{P_a}(den \cdot e^{(-OD_{Sun} \cdot OD_{ViewRay})})ds$
 
 Finally, the in-scattering equation puts it all together. It is essentially a scaled summation of optical depths. If each optical depth calculates light at one point, the in scattering equations attempts to calculate *all* points along a given ray. In code, we have a loop that runs numScatters time; each time it calls the OpticalDepth function which runs numOpticals times. If we choose large numbers, the scene might look nice, but it will get out of hand very quickly. One of the challenges of this atmosphere shader is the sheer quantity of parameters. There are *34* of them! The goal is to balance visuals with computation. Tweaking took a good long time, but it was worth it.
 
 <img width="500" height="117" alt="16_atmospheric_02" src="https://github.com/user-attachments/assets/4f41f664-6363-48d8-b364-edd2ed14c1d7" /><br>
-*Figure 19: Scattering Diagram*
+  *Figure 19: Scattering Diagram*
 
-Now that we have our equations, we should port them to code. Immediately, we run into a problem. There is nothing in the scene to actually raymarch through. To keep it procedural, we create a fullscreen shader and apply it to a sphere that exists purely mathematically. This shader runs in whats called a fragment shader. These take the triangles on our screen, break them up into pixels (fragments), and render them. We can use some fancy linear algebra to determine our world space camera position and then calculate the ray direction of every pixel. We can also access the depth buffer and linearize it so we don't accidentally render the clouds behind the planet. This is the data the computer gives us, but it's not yet what we need. For the atmosphere and clouds, we need two more things from these rays: A), when does the ray the atmosphere? And B), how far through the atmosphere does it traverse? These are necessary to compute the correct densities in the correct locations. Without it, the computer wouldn't know where to render anything.
+Now that we have our equations, we should port them to code. Immediately, we run into a problem. There is nothing in the scene to actually raymarch through. To keep it procedural, we create a fullscreen shader and apply it to a sphere that exists purely mathematically. This shader runs in what's called a fragment shader. These take the triangles on our screen, break them up into pixels (fragments), and render them. We can use some fancy linear algebra to determine our world space camera position and then calculate the ray direction of every pixel. We can also access the depth buffer and linearize it so we don't accidentally render the clouds behind the planet. This is the data the computer gives us, but it's not yet what we need. For the atmosphere and clouds, we need two more things from these rays: A), when does the ray hit the atmosphere? And B), how far through the atmosphere does it traverse? These are necessary to compute the correct densities in the correct locations. Without it, the computer wouldn't know where to render anything.
 
   To calculate these, we use what's called a ray-sphere intersection. They are quite fun to calculate on one's own. It's the kind of challenge that is simple enough not to be daunting but also not so easy it's boring. If we had a float3 representing our center, and a ray, we could use trigonometry to find the distance between the center and the nearest point on the ray. 
 
-  <img width="400" height="300" alt="raysphere4" src="https://github.com/user-attachments/assets/b1175c19-ebb3-4303-bf2f-ed9513f845a8" /><br>
-*Figure 20: Ray-Sphere Intersection Diagram*
+<img width="400" height="300" alt="raysphere4" src="https://github.com/user-attachments/assets/b1175c19-ebb3-4303-bf2f-ed9513f845a8" /><br>
+  *Figure 20: Ray-Sphere Intersection Diagram*
 
   First, we use our rayOrigin to find a vector to the center of the sphere. Then, we take a dot product between sphereVec and rayVec. This tells us exactly how long the rayVec must be for the most promixity to the sphere center. We will call this closest point p. Before continuing, we always want to work in distances squared. Sqrt functions are expensive. We actually determine whether p is in the sphere through the quadratic formula's discriminant: b^2 - 4ac. If the discriminant is > 0, e.g. has two real roots, we know the ray passes through two points on the sphere. 
   
@@ -563,8 +563,8 @@ Now that we have our equations, we should port them to code. Immediately, we run
 
   Once this has all been placed into code, we have a basic atmosphere with tunable colors!
 
-  <img width="515" height="320" alt="AtmosphereScattering" src="https://github.com/user-attachments/assets/c541d221-a942-4dc3-b44e-43b4ae96bb0b" /><br>
-*Figure 21: Changing Scattering Parameters to Change Atmosphere Color*
+<img width="515" height="320" alt="AtmosphereScattering" src="https://github.com/user-attachments/assets/c541d221-a942-4dc3-b44e-43b4ae96bb0b" /><br>
+  *Figure 21: Changing Scattering Parameters to Change Atmosphere Color*
 
   As for improvements, there is always optimization. The optical depth can be a cheap 2D texture lookup instead of an expensive exp() function. As for function, the atmosphere currently doesn't interact with the ground or the clouds, which it should.
 
@@ -581,12 +581,12 @@ The first noise algorithm we make is called Perlin Noise. It is unbelievably use
   <img width="480" height="240" alt="PerlinNoiseGradientGrid svg" src="https://github.com/user-attachments/assets/4310dadc-56c2-4677-9e93-ad27ae59e4a2" /><br>
 *Figure 24: Depiction of Perlin Noise Generation*
 
-The position of each corner is put into a hash function, and the value is used to create a random unit vector. Every corner is assigned one. When the actual texture itself is generated, there might be 10 or 50 texels between each corner of this grid. At each texel, we find the vector from the texel location to each of the four corners. Then, we compare that vector to the random unit vector via a dot product.
+The position of each corner is put into a hash function, and the value is used to create a random unit vector. Every corner is assigned one. When the actual texture itself is generated, there might be 10 or 50 texels, or texture pixels, between each corner of this grid. At each texel, we find the vector from the texel location to each of the four corners. Then, we compare that vector to the random unit vector via a dot product.
 
   <img width="225" height="225" alt="download" src="https://github.com/user-attachments/assets/85f2fa5e-1758-4a0e-9009-5598b1da02ce" /><br>
 *Figure 25: 2D Perlin Noise*
 
-This generates a nice gradient with large blobs that are useful for organic shapes and patterns. The other noise used for these clouds was worley noise. It uses a similar process: start with a 3D grid, and in each cell place a random point. It could be located anywhere within the cell's bounds. When the texture is generated, each texel corresponds to the distance of the nearest random point. Worley noise creates blobby, cell-like shapes. They can be used for caustics, terrain generation, or, luckily, clouds. 
+This generates a nice gradient with large blobs that are useful for organic shapes and patterns. The other noise used for these clouds was worley noise. It uses a similar process: start with a 3D grid, and in each cell place a random point. It could be located anywhere within the cell's bounds. When the texture is generated, each texel corresponds to the distance of the nearest random point. Worley noise creates blobby, cell-like shapes. They can be used for caustics, terrain generation, or, luckily for us, clouds. 
 
   <img width="250" height="250" alt="2d-cnoise-2x2" src="https://github.com/user-attachments/assets/20b407f1-2c5d-45f1-ba12-80fbf7da30d5" /><br>
 *Figure 26: Inverted Worley Noise*
