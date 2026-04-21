@@ -596,7 +596,7 @@ Noise can be layered, too. Here, I've stacked 7 layers of Worley noise on top of
 *Figure x: Worley FBM*
 
 
-To generate the clouds, we use a strange bastard of these two noises: perlin-worley. A remap function can be used, which takes a value of a range (min,max) and uses that ratio to place it in a new (min,max). This function is handy because it will leave high-density regions largely unnaffected, but mid or low density regions can have substantial effects. This means our new function keeps the organic shapes of perlin, but inscribes the billowiness of worley onto the high-density regions of it.
+To generate the clouds, we use a strange bastard of these two noises: perlin-worley. A remap function can be used, which takes a value of a range (min,max) and uses that ratio to place it in a new (min,max). This function is handy because it will leave high-density regions at the core of the cloud largely unnaffected, but mid or low density regions can have substantial effects. This means our new function keeps the organic shapes of perlin, but inscribes the billowiness of worley onto the high-density regions of it.
 
   <img width="200" height="197" alt="image" src="https://github.com/user-attachments/assets/bb230a9c-aeaa-4386-a7a2-ca5fb361fd3e" /><br>
 *Figure X: Perlin-Worley*
