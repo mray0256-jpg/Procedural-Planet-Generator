@@ -7,6 +7,7 @@ Graphics programming project inspired by the video game Outer Wilds.
 ## Overview
 - A project created to simulate planet generation. Currently a WIP with the hopes of being updated every month or two.
 - I chose this project primarily because I liked the idea of a modular sort of simulation, in which prior algorithms were only indirectly related to future ones, allowing for less fear of breaking something & nonlinear features.
+- Latest section: 4.0 Atmosphere & Clouds
 
 ## Tech Stack
 - Engine: Unity
@@ -30,7 +31,7 @@ This project contains all of the files to be run locally.
 - **Modular procedural systems architecture**, enabling independent tuning of terrain, atmosphere, and cloud generation parameters in the editor at runtime
 
 ## Technical details & what I learned
--  Note before you begin reading: I have been working on this for about four months. Alongside progress on the project, you will see me progress as a graphics programmer and Unity developer. I first learned how to code basic python about a year ago, and I first started Unity seven months ago. The first few sections are unpolished and amatuer, but I think they show growth so I've left them largely untouched.
+-  Note before you begin reading: I have been working on this for about five months. Alongside progress on the project, you will see me progress as a graphics programmer and Unity developer. I first learned how to code basic python about a year ago, and I first started Unity seven months ago. The first few sections are unpolished and amatuer, but I think they show growth so I've left them largely untouched.
 
 - This project has consisted almost entirely of math. I prefer this to my other projects, because of all the skills for development I'm most confident in my math ability. I've decided to split the project into phases due to it's modular nature. The first "phase" of the project was creating a sphere. I could've used a generic UV sphere supplied by blender or unity, but I wanted to generate my own to have fine control.
   
@@ -187,7 +188,7 @@ This project contains all of the files to be run locally.
   
   I met an issue, though. I want to freeze some particles and reuse others. Say I kept all particles in one giant RWStructuredBuffer, and there were 100,000 particles. When there's one particle left the other 99,999 would still have to run! That's not exactly ideal. Luckily for me, there exists another type of buffer: an append buffer. These can either be consumed from or appended to, and they have a special counter that tracks valid members. Their CPU analog would be a list. Now that we have dynamic data structures on the GPU, we can simply use the counter inside to run the GPU cores efficiently. At least, that's the idea. This is where my little complexity problem was introduced. 
   
-  To begin a function on the GPU, it must be dispatched on C#. The C# dispatch call has to tell the GPU precisely how many groups (e.g., iterations) should be run. Now, if I have a dynamic buffer, I no longer know how many members there are, so I don't know how many iterations should be run. (For context, each "iteration" consumes a particle from the append buffer). Unity kindly supplies us with a special type of dispatching, though, called DispatchIndirect. This type of function calling does not require the group count from the CPU, and instead supplies the group count from a buffer. Once buffers are set, their data is stored within the GPU's VRAM, which makes it O(1) to call.
+  To begin a function on the GPU, it must be dispatched on C#. The C# dispatch call has to tell the GPU precisely how many groups (i.e., iterations) should be run. Now, if I have a dynamic buffer, I no longer know how many members there are, so I don't know how many iterations should be run. (For context, each "iteration" consumes a particle from the append buffer). Unity kindly supplies us with a special type of dispatching, though, called DispatchIndirect. This type of function calling does not require the group count from the CPU, and instead supplies the group count from a buffer. Once buffers are set, their data is stored within the GPU's VRAM, which makes it O(1) to call.
 
   To use dispatch indirect, I first used another function called CopyCount. This takes the append buffer's hidden counter and stores that value inside a different buffer, as a usable element. Now, when dispatch indirect is called, if the group count parameter is the buffer from copycount, it should store an accurate number of iterations. In the end... this didn't work. The complexity route bit me here; because I had introduced so many foreign pieces integral to the algorithm, debugging became significantly harder. Worse still, debugging on the GPU required a lot more creativity than print and try-catch statements everywhere. Despite my best efforts, I never fully figured out why it happened, but I gleaned where. Some way or another DispatchIndirect and CopyCount never worked as intended. It was almost certainly user error of some kind, as this was my first time using compute shaders, but I couldn't find much help online, and forum posts suggested DispatchIndirect had been broken or buggy in the past. Note: if something I've described is erroneous, please reach out! This repository is meant to document learning, not mastery.
 
@@ -519,7 +520,7 @@ void scaleRadii(uint3 id : SV_DispatchThreadID)
 *Figure 17: Rift Generated by Subtracting DLA Output*
 
 
-- **Phase 4: Atmosphere**
+- **Phase 4: Atmosphere & Clouds**
 - The last section I wrote, the DLA algorithm, I finished about three months ago. During those months, I took a break to work on a game-jam and do some less math-heavy projects. It wasn't long, however, before I was ready to come back. Originally, I had grand plans to begin my return by massively overhauling the architecure of this project. As I'm sure is no surprise to anyone who's coded before, my ambitions morphed into a vision far less future-proof. Instead of fixing older issues, I began to create new ones.
 
   Thus began the month-long journey of learning physically-based shaders. Ray-marching, texture tradeoffs, calculus, pedantically named functions, volumetrics, noise, and heaps of research papers. Boy, did I love it.
@@ -622,8 +623,8 @@ Now that the atmosphere is largely complete, we can put everything together! The
 
 ## Future Additions
 I hope to update this page every 2 weeks, as I have a number of additional "phases" planned.
-- Adding octave noise atop the DLA algorithm to create semi-realistic land formations
-- Adding climates (biomes, temperatures, forests, clouds, etc.)
+- Breaking the terrain into chunks for LOD system, biomes, & terrain generation
+- Adding climates (biomes, temperatures, forests, etc.)
 - Using splines and gradients to add rivers that accruately travel down a slope to a body of water
 - Using boids to add birds that fly around the atmosphere, giving the planet life
 - Adding other planet types, of a simpler caliber, then creating an entirely procedural solar system
@@ -647,7 +648,7 @@ Thanks for reading! If you noticed any mistakes or would like to contact me, ple
 - Planets: [Devote on Youtube](https://www.youtube.com/watch?v=CeJz8tsgCPw)
 - Making of Outer Wilds: [Documentary by /noclip on YouTube](https://www.youtube.com/watch?v=LbY0mBXKKT0)
 - GPU-based DLA: [Article by Mykola Haltiuk](https://medium.com/@goader_/diffusion-limited-aggregation-in-a-highly-parallel-fashion-using-cuda-954ee66137e2)
-- RNG: [Article by Nathan Reed](https://www.reedbeta.com/blog/hash-functions-for-gpu-rendering/), [Article by Mark Jarzynski & Marc Oblano](https://jcgt.org/published/0009/03/02/paper.pdf)
+- RNG: [Article by Nathan Reed](https://www.reedbeta.com/blog/hash-functions-for-gpu-rendering/) & [Article by Mark Jarzynski & Marc Oblano](https://jcgt.org/published/0009/03/02/paper.pdf)
 - Clouds: [Presentation by Andrew Schneider](https://gdcvault.com/play/1028023/The-Real-Time-Volumetric-Superstorms) & [SimonDev on YouTube](https://www.youtube.com/watch?v=Qj_tK_mdRcA&t=77s)
 - Atmosphere: [Paper by Sean O'Neil](https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-16-accurate-atmospheric-scattering) & [Sebastian Lague on YouTube](https://www.youtube.com/watch?v=DxfEbulyFcY)
 - Perlin-Worley Noise: [Shader by piyushslayer on Shadertoy](https://www.shadertoy.com/view/3dVXDc)
