@@ -567,7 +567,7 @@ Now that we have our equations, we should port them to code. Immediately, we run
 <img width="515" height="320" alt="AtmosphereScattering" src="https://github.com/user-attachments/assets/c541d221-a942-4dc3-b44e-43b4ae96bb0b" /><br>
   *Figure 21: Changing Scattering Parameters to Change Atmosphere Color*
 
-  As for improvements, there is always optimization. The optical depth can be a cheap 2D texture lookup instead of an expensive exp() function. As for function, the atmosphere currently doesn't interact with the ground or the clouds, which it should.
+  As for improvements, there is always optimization. The optical depth can be a cheap 2D texture lookup instead of an expensive exp() function. Functionally, the atmosphere currently doesn't interact with the ground or the clouds, which it should.
 
 <img width="640" height="473" alt="image" src="https://github.com/user-attachments/assets/80f2a35a-1b9d-41b8-82b5-ec44f42e929e" /><br>
   *Figure 22: Atmosphere from planet surface*
