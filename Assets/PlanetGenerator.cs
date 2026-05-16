@@ -640,10 +640,10 @@ public class PlanetGenerator : MonoBehaviour
     //PHASE 3: MOUNTAINS
 
     float DLAThreshold = 0.6f;
-    float DLAWeight = 0.6f;
+    public float DLAWeight = 0.4f;
     int DLAStep = 1;
-    int DLAMax = 5000;
-    int DLAblurs = 8;
+    int DLAMax = 1000;
+    public int DLAblurs = 16;
     int particleStride = 24;
     float mountainRatio = 0.25f;
     int[] neighborsArray;
@@ -1032,10 +1032,10 @@ public class PlanetGenerator : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        for (int i = 0; i < 12; i++)
-        {
-            Gizmos.DrawSphere(vertices[i], 0.02f);
-        }
+        //for (int i = 0; i < 12; i++)
+        //{
+        //    Gizmos.DrawSphere(vertices[i], 0.02f);
+        //}
         //if (planet != null && planet.colors32 != null && planet.colors32.Length > 0)
         //{
         //    Gizmos.color = Color.hotPink;

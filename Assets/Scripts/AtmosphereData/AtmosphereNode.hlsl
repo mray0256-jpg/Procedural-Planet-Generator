@@ -156,7 +156,7 @@ float cloudOpticalDepth(float3 rayDir, float3 rayOrigin)
 {
     float lengthSun = RaySphere(planetCenter, outerCloudRadius, rayOrigin, rayDir, 99999).y;
     
-    float planetCheck = RaySphere(planetCenter, planetRadius, rayOrigin, rayDir, 9999).x;
+    //float planetCheck = RaySphere(planetCenter, planetRadius, rayOrigin, rayDir, 9999).x;
     //check if the location is behind the planet.
     //if (planetCheck != -1)
     //    return 999;

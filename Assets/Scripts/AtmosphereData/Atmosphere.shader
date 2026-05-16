@@ -153,6 +153,9 @@ Shader "Planets/AtmosphereShader"
 
                 float3 sunDir = normalize(sunCenter - planetCenter);
                 float4 returnColor = sceneColor;
+
+                return sceneColor; //***RIGHT HERE****
+
                 float3 zero = float3(0, 0, 0);
 
                 float3 c = 0;
